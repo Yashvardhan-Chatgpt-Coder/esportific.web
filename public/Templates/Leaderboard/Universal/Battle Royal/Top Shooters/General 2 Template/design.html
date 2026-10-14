@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Top Shooters - General 2</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,800&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0b0c10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    #viewport {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #poster-scaler {
+      width: 1122px;
+      height: 1402px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-origin: center center;
+      flex-shrink: 0;
+    }
+
+    /* POSTER ROOT */
+    .poster {
+      position: relative;
+      width: 1122px;
+      height: 1402px;
+      overflow: hidden;
+      background-color: #f7ede0;
+      color: #111827;
+      user-select: none;
+    }
+
+    /* BACKGROUND LAYER */
+    .bg-image {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* TOP BRANDING LOGO */
+    .brand-logo-wrap {
+      position: absolute;
+      top: 36px;
+      left: 52px;
+      z-index: 10;
+    }
+
+    .brand-logo-img {
+      height: 26px;
+      width: auto;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* EVENT SUBTITLE */
+    .event-subtitle-wrap {
+      position: absolute;
+      top: 404px;
+      left: 0;
+      width: 1122px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      z-index: 10;
+    }
+
+    .event-dash {
+      width: 52px;
+      height: 3.5px;
+      background-color: #ff5801;
+      border-radius: 2px;
+    }
+
+    .event-subtitle-text {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: #111827;
+      letter-spacing: 0.5px;
+      text-transform: none;
+      line-height: 1;
+    }
+
+    /* CARDS CONTENT LAYER */
+    .cards-container {
+      position: absolute;
+      top: 920px;
+      left: 0;
+      width: 1122px;
+      height: 310px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .card-slot {
+      position: absolute;
+      top: 0;
+      height: 310px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    /* Card positions matching background columns */
+    .card-slot-0 { left: 33px; width: 201px; }
+    .card-slot-1 { left: 245px; width: 201px; }
+    .card-slot-2 { left: 456px; width: 214px; }
+    .card-slot-3 { left: 682px; width: 201px; }
+    .card-slot-4 { left: 892px; width: 201px; }
+
+    /* Upper Info Section */
+    .upper-info {
+      width: 100%;
+      height: 188px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 10px;
+    }
+
+    .player-name {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: 0.2px;
+      color: #111827;
+      text-transform: uppercase;
+      line-height: 1;
+      margin-bottom: 12px;
+      max-width: 184px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Grey divider lines above and below team name and logo */
+    .card-divider {
+      width: 82%;
+      height: 1.5px;
+      background-color: #dfd8cc;
+      margin: 0 auto;
+      flex-shrink: 0;
+    }
+
+    /* Team section shifted downwards with comfortable breathing room */
+    .team-section {
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding-top: 4px;
+      padding-bottom: 3px;
+    }
+
+    .team-logo-wrap {
+      width: 48px;
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+
+    .team-logo-img {
+      max-width: 48px;
+      max-height: 46px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+
+    .team-name {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #111827;
+      text-transform: uppercase;
+      line-height: 1.15;
+      max-width: 184px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Lower Kills Section */
+    .kills-section {
+      width: 100%;
+      height: 116px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding-bottom: 4px;
+    }
+
+    .kills-label {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 14.5px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      color: #111827;
+      text-transform: uppercase;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+
+    .kills-count {
+      font-family: 'Bebas Neue', 'Plus Jakarta Sans', sans-serif;
+      font-size: 68px;
+      font-weight: 700;
+      color: #ff5801;
+      line-height: 0.95;
+      letter-spacing: 0.5px;
+    }
+
+    /* Middle card (Rank 1): kills shifted a bit down and increased size */
+    .card-slot-center .kills-section {
+      justify-content: flex-start;
+      padding-top: 14px;
+    }
+
+    .card-slot-center .kills-label {
+      margin-bottom: 2px;
+    }
+
+    .card-slot-center .kills-count {
+      font-size: 82px;
+      line-height: 0.9;
+      transform: translateY(4px);
+    }
+
+    /* Bottom Left Branding: Made With + Esportific Logo */
+    .bottom-left-branding {
+      position: absolute;
+      bottom: 36px;
+      left: 52px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .made-with-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: #ffffff;
+      line-height: 1;
+      letter-spacing: 0.3px;
+    }
+
+    .esportific-brand-img {
+      height: 32px;
+      width: auto;
+      object-fit: contain;
+      filter: brightness(0) invert(1);
+      display: block;
+    }
+
+    /* Bottom Right Dynamic Tagline */
+    .bottom-right-tagline {
+      position: absolute;
+      bottom: 42px;
+      right: 52px;
+      display: flex;
+      align-items: center;
+      z-index: 10;
+      pointer-events: none;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 16.5px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <div id="viewport">
+    <div id="poster-scaler">
+      <div class="poster" id="poster">
+
+        <!-- BACKGROUND IMAGE -->
+        <img src="Background.png" alt="Background" class="bg-image" />
+
+        <!-- TOP BRANDING LOGO -->
+        <div class="brand-logo-wrap">
+          <img src="free-fire-logo.png" alt="Free Fire" class="brand-logo-img" />
+        </div>
+
+        <!-- EVENT SUBTITLE -->
+        <div class="event-subtitle-wrap">
+          <span class="event-dash"></span>
+          <span class="event-subtitle-text" id="event-name">BGMI Invitational 2025 36</span>
+          <span class="event-dash"></span>
+        </div>
+
+        <!-- 5 CARDS CONTENT LAYER -->
+        <div class="cards-container">
+
+          <!-- SLOT 0: RANK 4 (Far Left) -->
+          <div class="card-slot card-slot-0">
+            <div class="upper-info">
+              <div class="player-name" id="player-0">RYZEN</div>
+              <div class="card-divider"></div>
+              <div class="team-section">
+                <div class="team-logo-wrap">
+                  <img src="logo-apex.png" alt="Apex Union" class="team-logo-img" id="team-logo-0" />
+                </div>
+                <div class="team-name" id="team-0">APEX UNION</div>
+              </div>
+              <div class="card-divider"></div>
+            </div>
+            <div class="kills-section">
+              <div class="kills-label">KILLS</div>
+              <div class="kills-count" id="kills-0">12</div>
+            </div>
+          </div>
+
+          <!-- SLOT 1: RANK 2 (Left Mid) -->
+          <div class="card-slot card-slot-1">
+            <div class="upper-info">
+              <div class="player-name" id="player-1">LUNA</div>
+              <div class="card-divider"></div>
+              <div class="team-section">
+                <div class="team-logo-wrap">
+                  <img src="logo-phoenix.png" alt="Phoenix Esports" class="team-logo-img" id="team-logo-1" />
+                </div>
+                <div class="team-name" id="team-1">PHOENIX ESPORTS</div>
+              </div>
+              <div class="card-divider"></div>
+            </div>
+            <div class="kills-section">
+              <div class="kills-label">KILLS</div>
+              <div class="kills-count" id="kills-1">18</div>
+            </div>
+          </div>
+
+          <!-- SLOT 2: RANK 1 (Center Prominent) -->
+          <div class="card-slot card-slot-2 card-slot-center">
+            <div class="upper-info">
+              <div class="player-name" id="player-2">KAIROS</div>
+              <div class="card-divider"></div>
+              <div class="team-section">
+                <div class="team-logo-wrap">
+                  <img src="logo-nexus.png" alt="Team Nexus" class="team-logo-img" id="team-logo-2" />
+                </div>
+                <div class="team-name" id="team-2">TEAM NEXUS</div>
+              </div>
+              <div class="card-divider"></div>
+            </div>
+            <div class="kills-section">
+              <div class="kills-label">KILLS</div>
+              <div class="kills-count" id="kills-2">24</div>
+            </div>
+          </div>
+
+          <!-- SLOT 3: RANK 3 (Right Mid) -->
+          <div class="card-slot card-slot-3">
+            <div class="upper-info">
+              <div class="player-name" id="player-3">ZORO</div>
+              <div class="card-divider"></div>
+              <div class="team-section">
+                <div class="team-logo-wrap">
+                  <img src="logo-eclipse.png" alt="Eclipse" class="team-logo-img" id="team-logo-3" />
+                </div>
+                <div class="team-name" id="team-3">ECLIPSE</div>
+              </div>
+              <div class="card-divider"></div>
+            </div>
+            <div class="kills-section">
+              <div class="kills-label">KILLS</div>
+              <div class="kills-count" id="kills-3">15</div>
+            </div>
+          </div>
+
+          <!-- SLOT 4: RANK 5 (Far Right) -->
+          <div class="card-slot card-slot-4">
+            <div class="upper-info">
+              <div class="player-name" id="player-4">NOVA</div>
+              <div class="card-divider"></div>
+              <div class="team-section">
+                <div class="team-logo-wrap">
+                  <img src="logo-royal-kings.png" alt="Royal Kings" class="team-logo-img" id="team-logo-4" />
+                </div>
+                <div class="team-name" id="team-4">ROYAL KINGS</div>
+              </div>
+              <div class="card-divider"></div>
+            </div>
+            <div class="kills-section">
+              <div class="kills-label">KILLS</div>
+              <div class="kills-count" id="kills-4">11</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- BOTTOM BRANDING (from General Template 2) -->
+        <div class="bottom-left-branding">
+          <span class="made-with-title">Made With</span>
+          <img src="esportific-logo.png" alt="Esportific" class="esportific-brand-img" />
+        </div>
+
+        <div class="bottom-right-tagline" id="gameTagline">
+          Compete Survive Booyah
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Responsive dynamic scaler
+    function fitPoster() {
+      const scaler = document.getElementById('poster-scaler');
+      if (!scaler) return;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const scale = Math.min((w - 24) / 1122, (h - 24) / 1402, 1);
+      scaler.style.transform = `scale(${scale}) translateZ(0)`;
+    }
+
+    window.addEventListener('resize', fitPoster);
+    window.addEventListener('DOMContentLoaded', fitPoster);
+    fitPoster();
+
+    // Helper: Strictly single word for player names
+    function formatPlayerName(name) {
+      if (!name) return "";
+      return name.trim().split(/\s+/)[0].toUpperCase();
+    }
+
+    // Dynamic data setter function
+    // Podium Slot order: [Rank 4, Rank 2, Rank 1, Rank 3, Rank 5]
+    window.setShootersData = function(data) {
+      if (!data) return;
+      if (data.eventName) {
+        document.getElementById('event-name').textContent = data.eventName;
+      }
+      
+      const shooters = data.shooters || [];
+      if (shooters.length >= 5) {
+        // Map rank order to podium slots: [rank4, rank2, rank1, rank3, rank5]
+        const slotMap = [shooters[3], shooters[1], shooters[0], shooters[2], shooters[4]];
+        slotMap.forEach((shooter, slotIdx) => {
+          if (!shooter) return;
+          const pEl = document.getElementById(`player-${slotIdx}`);
+          const lEl = document.getElementById(`team-logo-${slotIdx}`);
+          const tEl = document.getElementById(`team-${slotIdx}`);
+          const kEl = document.getElementById(`kills-${slotIdx}`);
+          if (pEl) pEl.textContent = formatPlayerName(shooter.player);
+          if (lEl && shooter.logo) lEl.src = shooter.logo;
+          if (tEl) tEl.textContent = shooter.team;
+          if (kEl) kEl.textContent = shooter.kills;
+        });
+      }
+    };
+  </script>
+</body>
+</html>

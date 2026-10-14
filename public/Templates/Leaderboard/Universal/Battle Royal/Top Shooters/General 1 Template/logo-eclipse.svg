@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="eclGrad" x1="15%" y1="10%" x2="85%" y2="90%">
+      <stop offset="0%" stop-color="#e9d5ff"/>
+      <stop offset="35%" stop-color="#c084fc"/>
+      <stop offset="70%" stop-color="#7e22ce"/>
+      <stop offset="100%" stop-color="#3b0764"/>
+    </linearGradient>
+  </defs>
+  <path d="M50 10 C72.1 10 90 27.9 90 50 C90 72.1 72.1 90 50 90 C33.8 90 19.8 80.4 13.5 66.5 C27 70.5 41.5 65.5 50.5 54.5 C59.5 43.5 61.5 28 54.5 15.5 C53 13.5 51.5 11.6 50 10 Z" fill="url(#eclGrad)"/>
+</svg>

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>General Template 2 - Esports Standings</title>
+  <style>
+    @font-face {
+      font-family: 'Arial Rounded MT Bold';
+      src: url('ArialRoundedMTBold.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: #1a1a1a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Arial Rounded MT Bold', 'Arial Rounded MT', 'Nunito', sans-serif;
+      overflow: hidden;
+    }
+
+    /* Scaling container */
+    .viewport-container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .canvas {
+      width: 1080px;
+      height: 1350px;
+      position: relative;
+      background-color: #f7a01d;
+      background-image: url('Background.png');
+      background-size: 100% 100%;
+      background-position: center;
+      background-repeat: no-repeat;
+      overflow: hidden;
+      transform-origin: center center;
+      flex-shrink: 0;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    }
+
+    /* Top Game Logo */
+    .top-game-bar {
+      position: absolute;
+      top: 52px;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .game-logo {
+      height: 48px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    /* Arched / Rounded Event Title Section */
+    .title-section {
+      position: absolute;
+      top: 275px;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .title-svg {
+      width: 1000px;
+      height: 100px;
+      overflow: visible;
+    }
+
+    .curved-title-text {
+      font-family: 'Arial Rounded MT Bold', 'Arial Rounded MT', 'Nunito', sans-serif;
+      font-size: 46px;
+      font-weight: 900;
+      fill: #18181a;
+      stroke: #18181a;
+      stroke-width: 2.2px;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      paint-order: stroke fill;
+      letter-spacing: -0.3px;
+    }
+
+    .sparkle-char {
+      font-size: 28px;
+      fill: #18181a;
+      stroke: #18181a;
+      stroke-width: 1px;
+    }
+
+    /* Table Container */
+    .table-wrapper {
+      position: absolute;
+      top: 382px;
+      left: 48px;
+      width: 984px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      z-index: 10;
+    }
+
+    .standings-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    /* Column Widths */
+    .col-rank { width: 62px; }
+    .col-team { width: 332px; }
+    .col-wins { width: 110px; }
+    .col-kills { width: 140px; }
+    .col-place { width: 185px; }
+    .col-total { width: 155px; }
+
+    /* Table Header */
+    .standings-table thead tr {
+      background-color: #c80f0a;
+      height: 58px;
+    }
+
+    .standings-table th {
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0 8px;
+      vertical-align: middle;
+      border-right: 1px solid rgba(255, 255, 255, 0.22);
+      letter-spacing: 0.3px;
+    }
+
+    .standings-table th:last-child {
+      border-right: none;
+    }
+
+    .standings-table th.rank-th {
+      font-size: 22px;
+      text-align: center;
+      padding: 0;
+    }
+
+    .standings-table th.team-th {
+      text-align: left;
+      padding-left: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    .standings-table th.stat-th {
+      text-align: center;
+    }
+
+    .two-line-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.15;
+      font-size: 13.5px;
+      gap: 1px;
+    }
+
+    /* Table Rows */
+    .standings-table tbody tr {
+      height: 45.5px;
+      transition: background-color 0.2s ease;
+    }
+
+    .standings-table tbody tr:nth-child(odd) {
+      background-color: #fdf2dc;
+    }
+
+    .standings-table tbody tr:nth-child(even) {
+      background-color: #f7e5bf;
+    }
+
+    .standings-table tbody td {
+      border-right: 1px solid #ebd0a0;
+      border-top: 1px solid #ebcf9f;
+      color: #18181a;
+      vertical-align: middle;
+      padding: 0 8px;
+    }
+
+    .standings-table tbody td:last-child {
+      border-right: none;
+    }
+
+    .standings-table tbody tr:first-child td {
+      border-top: none;
+    }
+
+    /* Rank Cell */
+    .rank-td {
+      font-size: 18px;
+      font-weight: 700;
+      text-align: center;
+      padding: 0 !important;
+    }
+
+    /* Team Cell */
+    .team-td {
+      padding-left: 18px !important;
+      text-align: left;
+    }
+
+    .team-cell-content {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      overflow: hidden;
+    }
+
+    .team-crest {
+      width: 26px;
+      height: 26px;
+      object-fit: contain;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .team-crest img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .team-crest svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .team-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #18181a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: -0.2px;
+    }
+
+    /* Stats Cells */
+    .stat-td {
+      font-size: 17px;
+      font-weight: 700;
+      text-align: center;
+      color: #18181a;
+    }
+
+    /* Bottom Left Branding: Made With + Esportific Logo */
+    .bottom-left-branding {
+      position: absolute;
+      bottom: 40px;
+      left: 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 7px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .made-with-title {
+      font-family: 'Arial Rounded MT', 'Nunito', sans-serif;
+      font-size: 17.5px;
+      font-weight: 500;
+      color: #ffffff;
+      line-height: 1;
+      letter-spacing: 0.3px;
+    }
+
+    .esportific-brand-img {
+      height: 35px;
+      width: auto;
+      object-fit: contain;
+      filter: brightness(0) invert(1);
+      display: block;
+    }
+
+    /* Bottom Right Dynamic Tagline */
+    .bottom-right-tagline {
+      position: absolute;
+      bottom: 40px;
+      right: 48px;
+      display: flex;
+      align-items: center;
+      z-index: 10;
+      pointer-events: none;
+      font-family: 'Arial Rounded MT Bold', 'Arial Rounded MT', 'Nunito', sans-serif;
+      font-size: 16.5px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="viewport-container" id="viewportContainer">
+    <div class="canvas" id="canvas">
+
+      <!-- Top Game Logo -->
+      <div class="top-game-bar">
+        <img id="gameLogo" src="free-fire-logo.png" alt="Game Logo" class="game-logo">
+      </div>
+
+      <!-- Arched / Rounded Event Title -->
+      <div class="title-section">
+        <svg class="title-svg" viewBox="0 0 1000 100">
+          <defs>
+            <path id="titleCurve" d="M 120,86 Q 500,28 880,86" fill="none" />
+          </defs>
+          <text class="curved-title-text">
+            <textPath id="curvedTextPath" href="#titleCurve" startOffset="50%" text-anchor="middle">
+              <tspan class="sparkle-char" dy="-2">✦ </tspan> <tspan id="eventTitle">Reformers Connect</tspan> <tspan class="sparkle-char" dy="-2"> ✦</tspan>
+            </textPath>
+          </text>
+        </svg>
+      </div>
+
+      <!-- Standings Table -->
+      <div class="table-wrapper">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th class="col-rank rank-th">#</th>
+              <th class="col-team team-th">TEAM</th>
+              <th class="col-wins stat-th">WINS</th>
+              <th class="col-kills stat-th">
+                <div class="two-line-header">
+                  <span>KILL</span>
+                  <span>POINTS</span>
+                </div>
+              </th>
+              <th class="col-place stat-th">
+                <div class="two-line-header">
+                  <span>PLACEMENT</span>
+                  <span>POINTS</span>
+                </div>
+              </th>
+              <th class="col-total stat-th">
+                <div class="two-line-header">
+                  <span>TOTAL</span>
+                  <span>POINTS</span>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- 16 Dynamic Rows Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Bottom Left Branding: Made With + Esportific Logo -->
+      <div class="bottom-left-branding">
+        <span class="made-with-title">Made With</span>
+        <img src="esportific-logo.png" alt="Esportific" class="esportific-brand-img">
+      </div>
+
+      <!-- Bottom Right Dynamic Tagline -->
+      <div class="bottom-right-tagline" id="gameTagline">
+        Compete Survive Booyah
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Responsive scaling
+    function resizeCanvas() {
+      const container = document.getElementById('viewportContainer');
+      const canvas = document.getElementById('canvas');
+      if (!container || !canvas) return;
+
+      const scaleX = window.innerWidth / 1080;
+      const scaleY = window.innerHeight / 1350;
+      const scale = Math.min(scaleX, scaleY, 1); // Fit to screen or 1:1
+
+      canvas.style.transform = `scale(${scale})`;
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('DOMContentLoaded', resizeCanvas);
+
+    // Preset team crest SVG icons
+    const CREST_SVGS = [
+      // Phoenix / Red Bird
+      `<svg viewBox="0 0 24 24" fill="#d91d1d"><path d="M12 2L14 7L19 4L16 9L22 10L17 14L20 19L14 16L12 22L10 16L4 19L7 14L2 10L8 9L5 4L10 7Z"/></svg>`,
+      // Titans / Blue Shield
+      `<svg viewBox="0 0 24 24"><path d="M12 2L4 5V11C4 16.5 7.4 21.6 12 23C16.6 21.6 20 16.5 20 11V5L12 2Z" fill="#182848"/><path d="M7 8H17V11H13.5V18H10.5V11H7V8Z" fill="#ffffff"/></svg>`,
+      // Shadow Clan / Purple Hood
+      `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#2d124d"/><path d="M12 4C8 4 6 8 6 12C6 16 9 20 12 20C15 20 18 16 18 12C18 8 16 4 12 4ZM9 12L10.5 13.5L9 15L7.5 13.5L9 12ZM15 12L16.5 13.5L15 15L13.5 13.5L15 12Z" fill="#a855f7"/></svg>`,
+      // Royal Kings / Crown
+      `<svg viewBox="0 0 24 24" fill="#eab308"><path d="M3 18H21V20H3V18ZM4 6L8.5 10L12 4L15.5 10L20 6L18.5 16H5.5L4 6Z"/></svg>`,
+      // Vortex / Blue Swirl
+      `<svg viewBox="0 0 24 24" fill="#0284c7"><path d="M12 2A10 10 0 1 0 22 12A10 10 0 0 0 12 2Zm0 17a7 7 0 1 1 7-7 7 7 0 0 1-7 7Zm-2-7a2 2 0 1 1 2 2 2 2 0 0 1-2-2Z"/></svg>`,
+      // Team Nexus / Orange Diamond N
+      `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4" fill="#ea580c"/><path d="M7 7H10L14 13V7H17V17H14L10 11V17H7V7Z" fill="#ffffff"/></svg>`,
+      // Blaze / Orange Flame
+      `<svg viewBox="0 0 24 24" fill="#f97316"><path d="M12 2C9 7 6 9 6 13C6 17 9 21 12 22C15 21 18 17 18 13C18 10 16 6 12 2ZM12 19C10.5 19 9 17.5 9 15C9 13 10.5 11 12 10C13.5 11 15 13 15 15C15 17.5 13.5 19 12 19Z"/></svg>`,
+      // Eclipse / Crescent
+      `<svg viewBox="0 0 24 24" fill="#0f172a"><path d="M12 2A10 10 0 1 0 22 12A10 10 0 0 1 12 2Z"/></svg>`,
+      // Quantum / Atom
+      `<svg viewBox="0 0 24 24" fill="#2563eb"><circle cx="12" cy="12" r="3"/><path d="M12 3C7 3 3 7 3 12S7 21 12 21 21 17 21 12 17 3 12 3ZM12 19C8.1 19 5 15.9 5 12S8.1 5 12 5 19 8.1 19 12 15.9 19 12 19Z"/></svg>`,
+      // Apex / Red Delta
+      `<svg viewBox="0 0 24 24"><polygon points="12,2 22,20 2,20" fill="#dc2626"/><polygon points="12,8 18,18 6,18" fill="#ffffff"/></svg>`,
+      // Inferno / Dark Red Beast
+      `<svg viewBox="0 0 24 24" fill="#991b1b"><path d="M12 2L15 8L21 9L16.5 13.5L18 20L12 16.5L6 20L7.5 13.5L3 9L9 8L12 2Z"/></svg>`,
+      // Celestials / Wings
+      `<svg viewBox="0 0 24 24" fill="#06b6d4"><path d="M12 3C7 3 3 8 3 13C3 18 8 21 12 21C16 21 21 18 21 13C21 8 17 3 12 3ZM7 14L10 11L12 14L14 11L17 14L12 18L7 14Z"/></svg>`,
+      // Nova Esports / Star Trails
+      `<svg viewBox="0 0 24 24" fill="#9333ea"><polygon points="12,1 15,9 23,10 17,16 19,23 12,19 5,23 7,16 1,10 9,9"/></svg>`,
+      // Revenant / Skull
+      `<svg viewBox="0 0 24 24" fill="#1e293b"><circle cx="12" cy="10" r="7"/><rect x="8" y="15" width="8" height="6" rx="2"/><circle cx="9.5" cy="10" r="1.5" fill="#ffffff"/><circle cx="14.5" cy="10" r="1.5" fill="#ffffff"/></svg>`,
+      // Nemesis / Hexagon
+      `<svg viewBox="0 0 24 24" fill="#450a0a"><polygon points="12,2 21,7 21,17 12,22 3,17 3,7"/></svg>`,
+      // Horizon / Sun & Mountain
+      `<svg viewBox="0 0 24 24" fill="#d97706"><circle cx="12" cy="8" r="4"/><path d="M2 20L8 12L13 18L17 14L22 20H2Z"/></svg>`
+    ];
+
+    const DEFAULT_TEAMS = [
+      { rank: 1, name: "Phoenix Esports", wins: 0, kills: 0, placePts: 0, totalPts: 0 },
+      { rank: 2, name: "Titans", wins: 0, kills: 0, placePts: 0, totalPts: 0 },
+      { rank: 3, name: "Shadow Clan", wins: 0, kills: 0, placePts: 0, totalPts: 0 },
+      { rank: 4, name: "Royal Kings", wins: 0, kills: 0, placePts: 0, totalPts: 0 },
+      { rank: 5, name: "Vortex", wins: 0, kills: 0, placePts: 0, totalPts: 0 },
+      { rank: 6, name: "Team Nexus", wins: 0, kills: 0, placePts: 0, totalPts: 0 },
+      { rank: 7, name: "Blaze", wins: 0, kills: 0, placePts: 0, totalPts: 0 },
+      { rank: 8, name: "Eclipse", wins: 0, kills: 0, placePts: 0, totalPts: 0 },
+      { rank: 9, name: "Quantum", wins: 0, kills: 0, placePts: 0, totalPts: 0 },
+      { rank: 10, name: "Apex", wins: 0, kills: 0, placePts: 0, totalPts: 0 },
+      { rank: 11, name: "Inferno", wins: 0, kills: 0, placePts: 0, totalPts: 0 },
+      { rank: 12, name: "Celestials", wins: 0, kills: 0, placePts: 0, totalPts: 0 },
+      { rank: 13, name: "Nova Esports", wins: 0, kills: 0, placePts: 0, totalPts: 0 },
+      { rank: 14, name: "Revenant", wins: 0, kills: 0, placePts: 0, totalPts: 0 },
+      { rank: 15, name: "Nemesis", wins: 0, kills: 0, placePts: 0, totalPts: 0 },
+      { rank: 16, name: "Horizon", wins: 0, kills: 0, placePts: 0, totalPts: 0 }
+    ];
+
+    function renderTable(teams) {
+      const tbody = document.getElementById('tableBody');
+      if (!tbody) return;
+
+      tbody.innerHTML = '';
+      const list = (teams && teams.length > 0) ? teams.slice(0, 16) : DEFAULT_TEAMS;
+
+      list.forEach((team, idx) => {
+        const tr = document.createElement('tr');
+
+        // Crest: use image logo if provided, else use SVG crest preset
+        let crestHtml = '';
+        if (team.logo) {
+          crestHtml = `<img src="${team.logo}" alt="${team.name}">`;
+        } else {
+          crestHtml = CREST_SVGS[idx % CREST_SVGS.length];
+        }
+
+        tr.innerHTML = `
+          <td class="rank-td">${team.rank !== undefined ? team.rank : (idx + 1)}</td>
+          <td class="team-td">
+            <div class="team-cell-content">
+              <div class="team-crest">${crestHtml}</div>
+              <span class="team-name">${team.name || 'Team ' + (idx + 1)}</span>
+            </div>
+          </td>
+          <td class="stat-td">${team.wins ?? 0}</td>
+          <td class="stat-td">${team.kills ?? team.killPts ?? 0}</td>
+          <td class="stat-td">${team.placePts ?? team.placementPts ?? 0}</td>
+          <td class="stat-td">${team.totalPts ?? team.points ?? 0}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Apply URL parameters or injected window.templateData
+    function applyData() {
+      const params = new URLSearchParams(window.location.search);
+      const gameParam = params.get('game') || 'freefire';
+      const titleParam = params.get('title');
+      const subtitleParam = params.get('subtitle');
+
+      const isBgmi = gameParam.toLowerCase().includes('bgmi') || gameParam.toLowerCase().includes('pubg');
+      const logoImg = document.getElementById('gameLogo');
+      const tagline = document.getElementById('gameTagline');
+      if (logoImg) {
+        if (isBgmi) {
+          logoImg.src = 'bgmi-logo.png';
+          logoImg.style.height = '44px';
+        } else {
+          logoImg.src = 'free-fire-logo.png';
+          logoImg.style.height = '48px';
+        }
+      }
+      if (tagline) {
+        tagline.textContent = isBgmi ? 'Winner Winner Chicken Dinner' : 'Compete Survive Booyah';
+      }
+
+      if (titleParam) {
+        document.getElementById('eventTitle').textContent = titleParam;
+      }
+
+      // Check window.templateData or render defaults
+      if (window.templateData && Array.isArray(window.templateData.teams)) {
+        renderTable(window.templateData.teams);
+      } else {
+        renderTable(DEFAULT_TEAMS);
+      }
+    }
+
+    applyData();
+  </script>
+</body>
+</html>

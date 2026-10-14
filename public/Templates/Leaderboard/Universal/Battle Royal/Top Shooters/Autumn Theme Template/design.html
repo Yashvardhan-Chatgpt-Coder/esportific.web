@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Top Shooters - Autumn Theme Template</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #08090b;
+      font-family: 'Arial Black', Gadget, Impact, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    /* Viewport Wrapper that centers and auto-fits canvas into any window */
+    .viewport-wrapper {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* 1080 x 1350 High-Resolution Canvas */
+    .template-canvas {
+      width: 1080px;
+      height: 1350px;
+      flex-shrink: 0;
+      position: relative;
+      transform-origin: center center;
+      transform: scale(min(calc((100vw - 24px) / 1080), calc((100vh - 24px) / 1350))) translateZ(0);
+      background: #0d0c0c url('Background.png') no-repeat center top;
+      background-size: 1080px 1350px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+      user-select: none;
+    }
+
+    /* Top Left Free Fire Wordmark Logo */
+    .top-brand-logo {
+      position: absolute;
+      top: 42px;
+      left: 45px;
+      height: 38px;
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
+      z-index: 10;
+    }
+
+    /* Player Stats Stage - Positioned cleanly in the dark vignette below the characters */
+    .player-stats-stage {
+      position: absolute;
+      top: 960px;
+      left: 0;
+      width: 1080px;
+      height: 250px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    /* Individual Pillar Stats Card */
+    .player-card {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      text-align: center;
+    }
+
+    /* Exact horizontal coordinates aligned to each pillar's column in Background.png */
+    .card-rank-4 {
+      left: 28px;
+      width: 188px;
+      top: 10px;
+    }
+
+    .card-rank-2 {
+      left: 226px;
+      width: 190px;
+      top: 10px;
+    }
+
+    .card-rank-1 {
+      left: 430px;
+      width: 220px;
+      top: 0px; /* Center champion sits slightly taller */
+    }
+
+    .card-rank-3 {
+      left: 665px;
+      width: 190px;
+      top: 10px;
+    }
+
+    .card-rank-5 {
+      left: 868px;
+      width: 188px;
+      top: 10px;
+    }
+
+    /* Player Name (Hero Gamertag) - Bebas Neue Bold with 2-word Line Wrapper */
+    .player-name {
+      font-family: 'Bebas Neue', Impact, sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      line-height: 0.92;
+      margin-bottom: 12px;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+      text-align: center;
+      max-width: 175px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .player-name span {
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .player-name.two-lines {
+      font-size: 26px;
+      line-height: 0.92;
+      margin-bottom: 8px;
+    }
+
+    .card-rank-1 .player-name {
+      font-size: 37px;
+      letter-spacing: 2.2px;
+      margin-bottom: 14px;
+      max-width: 205px;
+    }
+
+    .card-rank-1 .player-name.two-lines {
+      font-size: 30px;
+      line-height: 0.92;
+      margin-bottom: 10px;
+    }
+
+    /* Team Affiliation Badge (Logo + Name Row) */
+    .team-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      margin-bottom: 22px;
+      max-width: 100%;
+      padding: 0 4px;
+    }
+
+    .card-rank-1 .team-badge {
+      margin-bottom: 24px;
+      gap: 8px;
+    }
+
+    .team-logo {
+      height: 17px;
+      width: auto;
+      max-width: 23px;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+      flex-shrink: 0;
+    }
+
+    .card-rank-1 .team-logo {
+      height: 19px;
+      max-width: 25px;
+    }
+
+    /* Team Name - Plus Jakarta Sans */
+    .team-name {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+      line-height: 1;
+    }
+
+    .card-rank-1 .team-name {
+      font-size: 12px;
+      letter-spacing: 0.9px;
+    }
+
+    /* KILLS Label */
+    .kills-label {
+      font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+      font-size: 13.5px;
+      font-weight: 900;
+      color: #8c939e;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    }
+
+    .card-rank-1 .kills-label {
+      font-size: 14.5px;
+      margin-bottom: 4px;
+    }
+
+    /* Kill Score Count */
+    .kills-count {
+      font-family: 'Arial Black', Gadget, Impact, sans-serif;
+      font-size: 68px;
+      font-weight: 900;
+      color: #ff6a00;
+      line-height: 0.92;
+      letter-spacing: -1.5px;
+      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.85));
+    }
+
+    .card-rank-1 .kills-count {
+      font-size: 80px;
+      filter: drop-shadow(0 4px 14px rgba(255, 106, 0, 0.35)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.85));
+    }
+
+    /* Bottom Software Branding: Made With & Esportific Logo */
+    .bottom-branding {
+      position: absolute;
+      bottom: 42px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      z-index: 25;
+      pointer-events: none;
+    }
+
+    .made-with-label {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffffff;
+      opacity: 0.92;
+      line-height: 1;
+      letter-spacing: 0.6px;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+    }
+
+    .branding-logo {
+      height: 25px;
+      width: auto;
+      object-fit: contain;
+      display: block;
+      filter: brightness(0) invert(1) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.9));
+    }
+  </style>
+</head>
+<body>
+  <div class="viewport-wrapper">
+    <div class="template-canvas" id="templateCanvas">
+      <!-- Top Left Free Fire Wordmark Logo -->
+      <img src="free-fire-logo.png" alt="Free Fire" class="top-brand-logo">
+
+      <!-- Player Stats Content Stage Aligned to the Pillars & Vignette -->
+      <div class="player-stats-stage">
+        <!-- Rank 4 Player (Far Left) -->
+        <div class="player-card card-rank-4">
+          <div class="player-name">RYZEN</div>
+          <div class="team-badge">
+            <img src="logo-apex.svg" alt="Apex Union" class="team-logo">
+            <span class="team-name">APEX UNION</span>
+          </div>
+          <div class="kills-label">KILLS</div>
+          <div class="kills-count">12</div>
+        </div>
+
+        <!-- Rank 2 Player (Inner Left) -->
+        <div class="player-card card-rank-2">
+          <div class="player-name">LUNA</div>
+          <div class="team-badge">
+            <img src="logo-phoenix.svg" alt="Phoenix Esports" class="team-logo">
+            <span class="team-name">PHOENIX ESPORTS</span>
+          </div>
+          <div class="kills-label">KILLS</div>
+          <div class="kills-count">18</div>
+        </div>
+
+        <!-- Rank 1 Player (Center Champion) -->
+        <div class="player-card card-rank-1">
+          <div class="player-name">KAIROS DEMONSLAYER</div>
+          <div class="team-badge">
+            <img src="logo-nexus.svg" alt="Team Nexus" class="team-logo">
+            <span class="team-name">TEAM NEXUS</span>
+          </div>
+          <div class="kills-label">KILLS</div>
+          <div class="kills-count">24</div>
+        </div>
+
+        <!-- Rank 3 Player (Inner Right) -->
+        <div class="player-card card-rank-3">
+          <div class="player-name">ZORO PArdhan</div>
+          <div class="team-badge">
+            <img src="logo-eclipse.svg" alt="Eclipse" class="team-logo">
+            <span class="team-name">ECLIPSE</span>
+          </div>
+          <div class="kills-label">KILLS</div>
+          <div class="kills-count">15</div>
+        </div>
+
+        <!-- Rank 5 Player (Far Right) -->
+        <div class="player-card card-rank-5">
+          <div class="player-name">NOVA</div>
+          <div class="team-badge">
+            <img src="logo-royal-kings.svg" alt="Royal Kings" class="team-logo">
+            <span class="team-name">ROYAL KINGS</span>
+          </div>
+          <div class="kills-label">KILLS</div>
+          <div class="kills-count">11</div>
+        </div>
+      </div>
+
+      <!-- Bottom Software Branding -->
+      <div class="bottom-branding">
+        <span class="made-with-label">Made With</span>
+        <img src="esportific-logo.png" alt="Esportific" class="branding-logo">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Precision responsive auto-scaler
+    function resizeCanvas() {
+      const canvas = document.getElementById('templateCanvas');
+      if (!canvas) return;
+      const availW = window.innerWidth - 24;
+      const availH = window.innerHeight - 24;
+      const scale = Math.min(availW / 1080, availH / 1350);
+      canvas.style.transform = `scale(${scale}) translateZ(0)`;
+    }
+
+    // Line wrapper: when a player name has 2 words, it wraps to the second line
+    function applyPlayerNameLineWrappers() {
+      document.querySelectorAll('.player-name').forEach(el => {
+        // Get raw text without previous span tags
+        const rawText = (el.getAttribute('data-raw') || el.textContent).trim();
+        el.setAttribute('data-raw', rawText);
+        const words = rawText.split(/\s+/).filter(Boolean);
+        if (words.length >= 2) {
+          const mid = Math.ceil(words.length / 2);
+          const line1 = words.slice(0, mid).join(' ');
+          const line2 = words.slice(mid).join(' ');
+          el.innerHTML = `<span>${line1}</span><span>${line2}</span>`;
+          el.classList.add('two-lines');
+        } else if (words.length === 1) {
+          el.innerHTML = `<span>${words[0]}</span>`;
+          el.classList.remove('two-lines');
+        }
+      });
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('DOMContentLoaded', () => {
+      resizeCanvas();
+      applyPlayerNameLineWrappers();
+    });
+    window.addEventListener('load', () => {
+      resizeCanvas();
+      applyPlayerNameLineWrappers();
+    });
+    resizeCanvas();
+    applyPlayerNameLineWrappers();
+  </script>
+</body>
+</html>

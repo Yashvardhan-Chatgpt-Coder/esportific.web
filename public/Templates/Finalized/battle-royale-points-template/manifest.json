@@ -1,0 +1,16 @@
+{
+  "id": "battle-royale-points-template",
+  "name": "Battle Royale Points Template",
+  "status": "finalized",
+  "canvas": {
+    "width": 1122,
+    "height": 1402,
+    "ratio": "4:5"
+  },
+  "assets": {
+    "base": "Base.png",
+    "brandLogo": "new-logo.png"
+  },
+  "sourceDefinition": "src/lib/finalized-standings-templates.ts",
+  "notes": "Frozen copy of the completed standings template. Do not use Template Studio localStorage as the source of truth for this finalized design."
+}

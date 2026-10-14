@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Free Fire — Overall Standings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=League+Gothic&family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'Bebas Neue';
+      src: url('BebasNeue.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0d0e12;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #viewport {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Exact 4:5 Aspect Ratio Canvas (1080 x 1350 px) */
+    .poster {
+      width: 1080px;
+      height: 1350px;
+      position: relative;
+      flex-shrink: 0;
+      overflow: hidden;
+      background-color: #fbfbf9;
+      background-image: url('Background.png');
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      background-position: center center;
+      transform: scale(min(calc((100vw - 12px) / 1080), calc((100vh - 12px) / 1350)));
+      transform-origin: center center;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+    }
+
+    /* TOP BAR - Left-Aligned Game Logo */
+    .topbar {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 42px 50px 0 50px;
+      height: 84px;
+    }
+
+    .freefire-logo {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .freefire-img {
+      height: 33px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    /* TITLE BLOCK */
+    .title-block {
+      position: relative;
+      z-index: 2;
+      padding: 30px 50px 0 50px;
+    }
+    .main-heading {
+      font-family: 'League Gothic', sans-serif;
+      font-size: 128px;
+      font-weight: 400;
+      line-height: 0.88;
+      letter-spacing: -2.8px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+    .main-heading .black {
+      color: #111111;
+    }
+    .main-heading .orange {
+      color: #ff5801;
+    }
+
+    /* Slanted Rectangle with 3 Slanted Strips */
+    .after-match-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 14px;
+    }
+    .slanted-pill {
+      background: #ff5801;
+      transform: skewX(-24deg);
+      padding: 7px 24px 6px 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .slanted-pill-text {
+      transform: skewX(24deg);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      color: #ffffff;
+      text-transform: uppercase;
+      line-height: 1;
+    }
+    .slanted-strips {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .slanted-strips span {
+      display: block;
+      width: 5.5px;
+      height: 31px;
+      background: #ff5801;
+      transform: skewX(-24deg);
+    }
+
+    /* TABLE CONTAINER - Shifted Down, No Shadow */
+    .table-container {
+      position: relative;
+      z-index: 2;
+      margin: 50px 50px 0 50px;
+      border-radius: 14px 14px 6px 6px;
+      overflow: hidden;
+      box-shadow: none;
+      background: #ffffff;
+    }
+
+    /* Table Grid */
+    .table-grid {
+      display: grid;
+      grid-template-columns: 64px 320px 115px 140px 185px 156px;
+    }
+
+    /* Table Header */
+    .table-header {
+      background: #ff5801;
+      height: 50px;
+      color: #ffffff;
+    }
+    .th {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 13.5px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      border-right: 1px solid rgba(255, 255, 255, 0.22);
+    }
+    .th.rank-th {
+      font-family: 'Bebas Neue', 'Bebas Neue Pro', sans-serif;
+      font-size: 24px;
+      font-weight: 400;
+    }
+    .th.team-th {
+      justify-content: flex-start;
+      padding-left: 22px;
+    }
+    .th.total-th {
+      background: #111113;
+      border-right: none;
+    }
+    .th svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    /* Table Body */
+    .table-body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .table-row {
+      height: 48px;
+      background: #ffffff;
+      border-bottom: 1px solid #d5d8de;
+      transition: background 0.15s;
+    }
+    .table-row:nth-child(even) {
+      background: #f0f2f5;
+    }
+    .table-row:last-child {
+      border-bottom: none;
+    }
+
+    .td {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 600;
+      color: #111111;
+      position: relative;
+    }
+    .td:not(:last-child):not(.rank-td)::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      height: 65%;
+      width: 1px;
+      background: #d5d8de;
+    }
+
+    /* Rank Cell (Orange Column) */
+    .td.rank-td {
+      background: #ff5801;
+      color: #ffffff;
+      font-family: 'Bebas Neue', 'Bebas Neue Pro', sans-serif;
+      font-size: 24px;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+    }
+
+    /* Team Cell */
+    .td.team-td {
+      justify-content: flex-start;
+      padding-left: 16px;
+      gap: 14px;
+    }
+    .team-crest {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .team-crest svg {
+      width: 100%;
+      height: 100%;
+    }
+    .team-name {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #111111;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Total Points Cell (Black Column with Orange Numbers) */
+    .td.total-td {
+      background: #111113;
+      color: #ff5801;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 32px;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #1e1f23;
+    }
+    .table-row:last-child .total-td {
+      border-bottom: none;
+    }
+
+    /* FOOTER BAR */
+    .footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 72px;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-left: 54px;
+      padding-right: 50px;
+      z-index: 3;
+    }
+
+    .footer-made-with {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 5px;
+    }
+    .made-with-label {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #ffffff;
+      text-transform: none;
+      line-height: 1;
+    }
+    .esportific-brand-logo {
+      height: 29px;
+      width: auto;
+      object-fit: contain;
+      filter: brightness(0) invert(1);
+    }
+
+    .footer-tagline {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #111113;
+      text-transform: uppercase;
+    }
+    .footer-tagline .booyah {
+      color: #ff5801;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="viewport">
+    <div class="poster" id="poster">
+
+      <!-- TOP BAR: Left-Aligned Game Logo -->
+      <header class="topbar">
+        <div class="freefire-logo">
+          <img 
+            id="game-logo-img"
+            src="free-fire-logo.png" 
+            alt="Game Logo" 
+            class="freefire-img"
+          />
+        </div>
+      </header>
+
+      <!-- TITLE BLOCK -->
+      <section class="title-block">
+        <h1 class="main-heading">
+          <span class="black">Overall</span>
+          <span class="orange">Standings</span>
+        </h1>
+        <div class="after-match-row">
+          <div class="slanted-pill">
+            <span class="slanted-pill-text">GRAND ARENA CHAMPIONSHIP</span>
+          </div>
+          <div class="slanted-strips">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- TABLE CONTAINER -->
+      <section class="table-container">
+        <!-- Table Header -->
+        <div class="table-grid table-header">
+          <div class="th rank-th">#</div>
+          <div class="th team-th">
+            <!-- Team Icon -->
+            <svg viewBox="0 0 24 24">
+              <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+            </svg>
+            <span>Team</span>
+          </div>
+          <div class="th">
+            <!-- Trophy Icon -->
+            <svg viewBox="0 0 24 24">
+              <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/>
+            </svg>
+            <span>Wins</span>
+          </div>
+          <div class="th">
+            <!-- Crosshair Target Icon -->
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+            </svg>
+            <span>Kill Points</span>
+          </div>
+          <div class="th">
+            <!-- Crown Icon -->
+            <svg viewBox="0 0 24 24">
+              <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .55-.45 1-1 1H6c-.55 0-1-.45-1-1v-1h14v1z"/>
+            </svg>
+            <span>Placement Points</span>
+          </div>
+          <div class="th total-th">
+            <!-- Star Icon -->
+            <svg viewBox="0 0 24 24">
+              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+            </svg>
+            <span>Total Points</span>
+          </div>
+        </div>
+
+        <!-- Table 16 Rows -->
+        <div class="table-body">
+          
+          <!-- ROW 1 -->
+          <div class="table-grid table-row">
+            <div class="td rank-td">1</div>
+            <div class="td team-td">
+              <div class="team-crest">
+                <!-- Phoenix Crest -->
+                <svg viewBox="0 0 26 26" fill="none">
+                  <path d="M13 2 Q18 7 15 13 Q21 10 23 15 Q24 21 17 23 Q13 25 9 23 Q2 21 3 15 Q5 10 11 13 Q8 7 13 2Z" fill="#ff4d00" />
+                  <path d="M13 6 Q16 10 14 15 Q18 13 19 17 Q19 21 14 22 Q13 22 12 22 Q7 21 7 17 Q8 13 12 15 Q10 10 13 6Z" fill="#ffbc00" />
+                </svg>
+              </div>
+              <span class="team-name">Team Phoenix</span>
+            </div>
+            <div class="td">2</div>
+            <div class="td">48</div>
+            <div class="td">61</div>
+            <div class="td total-td">109</div>
+          </div>
+
+          <!-- ROW 2 -->
+          <div class="table-grid table-row">
+            <div class="td rank-td">2</div>
+            <div class="td team-td">
+              <div class="team-crest">
+                <!-- Deadly Squad Skull Crest -->
+                <svg viewBox="0 0 26 26" fill="none">
+                  <circle cx="13" cy="12" r="9" fill="#1b1c20" />
+                  <rect x="9" y="16" width="8" height="5" rx="1.5" fill="#1b1c20" />
+                  <circle cx="10" cy="11" r="2.2" fill="#e62e2d" />
+                  <circle cx="16" cy="11" r="2.2" fill="#e62e2d" />
+                  <path d="M3 13 Q3 5 13 5 Q23 5 23 13" stroke="#e62e2d" stroke-width="2" fill="none" />
+                </svg>
+              </div>
+              <span class="team-name">Deadly Squad</span>
+            </div>
+            <div class="td">1</div>
+            <div class="td">42</div>
+            <div class="td">58</div>
+            <div class="td total-td">100</div>
+          </div>
+
+          <!-- ROW 3 -->
+          <div class="table-grid table-row">
+            <div class="td rank-td">3</div>
+            <div class="td team-td">
+              <div class="team-crest">
+                <!-- Wildfire Flame Crest -->
+                <svg viewBox="0 0 26 26" fill="none">
+                  <path d="M13 2 Q18 8 16 13 Q21 11 20 17 Q19 23 13 24 Q7 23 6 17 Q5 11 10 13 Q8 8 13 2Z" fill="#e82b18" />
+                  <path d="M13 9 Q16 13 15 16 Q18 15 17 19 Q16 22 13 23 Q10 22 9 19 Q8 15 11 16 Q10 13 13 9Z" fill="#ffb400" />
+                </svg>
+              </div>
+              <span class="team-name">Wildfire</span>
+            </div>
+            <div class="td">1</div>
+            <div class="td">38</div>
+            <div class="td">57</div>
+            <div class="td total-td">95</div>
+          </div>
+
+          <!-- ROW 4 -->
+          <div class="table-grid table-row">
+            <div class="td rank-td">4</div>
+            <div class="td team-td">
+              <div class="team-crest">
+                <!-- Team Insane Cross Shield -->
+                <svg viewBox="0 0 26 26" fill="none">
+                  <polygon points="13,3 23,8 20,20 13,24 6,20 3,8" fill="#1b1c22" stroke="#7928ca" stroke-width="1.5" />
+                  <path d="M8 8 L18 18 M18 8 L8 18" stroke="#a855f7" stroke-width="3" stroke-linecap="round" />
+                </svg>
+              </div>
+              <span class="team-name">Team Insane</span>
+            </div>
+            <div class="td">1</div>
+            <div class="td">36</div>
+            <div class="td">52</div>
+            <div class="td total-td">88</div>
+          </div>
+
+          <!-- ROW 5 -->
+          <div class="table-grid table-row">
+            <div class="td rank-td">5</div>
+            <div class="td team-td">
+              <div class="team-crest">
+                <!-- Total Gaming Tiger Shield -->
+                <svg viewBox="0 0 26 26" fill="none">
+                  <polygon points="13,2 23,6 20,18 13,24 6,18 3,6" fill="#1d1e22" />
+                  <path d="M7 10 L13 5 L19 10 L17 17 L13 20 L9 17 Z" fill="#f97316" />
+                  <circle cx="10" cy="11" r="1.5" fill="#fff" />
+                  <circle cx="16" cy="11" r="1.5" fill="#fff" />
+                </svg>
+              </div>
+              <span class="team-name">Total Gaming</span>
+            </div>
+            <div class="td">1</div>
+            <div class="td">32</div>
+            <div class="td">54</div>
+            <div class="td total-td">86</div>
+          </div>
+
+          <!-- ROW 6 -->
+          <div class="table-grid table-row">
+            <div class="td rank-td">6</div>
+            <div class="td team-td">
+              <div class="team-crest">
+                <!-- PVS Gaming Crest -->
+                <svg viewBox="0 0 26 26" fill="none">
+                  <polygon points="13,2 23,7 19,20 13,24 7,20 3,7" fill="#111" stroke="#0ea5e9" stroke-width="1.5" />
+                  <path d="M8 8 L13 14 L18 8 L16 16 L13 18 L10 16 Z" fill="#38bdf8" />
+                </svg>
+              </div>
+              <span class="team-name">PVS Gaming</span>
+            </div>
+            <div class="td">0</div>
+            <div class="td">35</div>
+            <div class="td">49</div>
+            <div class="td total-td">84</div>
+          </div>
+
+          <!-- ROW 7 -->
+          <div class="table-grid table-row">
+            <div class="td rank-td">7</div>
+            <div class="td team-td">
+              <div class="team-crest">
+                <!-- 4Flag Gamer Crest -->
+                <svg viewBox="0 0 26 26" fill="none">
+                  <polygon points="13,2 23,7 19,20 13,24 7,20 3,7" fill="#151515" />
+                  <path d="M8 7 L14 7 L14 13 L8 13 Z M14 7 L18 12 L14 17 Z" fill="#f59e0b" />
+                  <path d="M14 13 L14 20" stroke="#f59e0b" stroke-width="2" />
+                </svg>
+              </div>
+              <span class="team-name">4Flag Gamer</span>
+            </div>
+            <div class="td">1</div>
+            <div class="td">29</div>
+            <div class="td">46</div>
+            <div class="td total-td">75</div>
+          </div>
+
+          <!-- ROW 8 -->
+          <div class="table-grid table-row">
+            <div class="td rank-td">8</div>
+            <div class="td team-td">
+              <div class="team-crest">
+                <!-- Godlike Gold Crest -->
+                <svg viewBox="0 0 26 26" fill="none">
+                  <polygon points="13,2 23,6 19,19 13,24 7,19 3,6" fill="#111" stroke="#eab308" stroke-width="1.5" />
+                  <circle cx="13" cy="13" r="5" stroke="#eab308" stroke-width="1.8" fill="none" />
+                  <path d="M13 10 L16 13 L13 16 L10 13 Z" fill="#eab308" />
+                </svg>
+              </div>
+              <span class="team-name">Godlike Esports</span>
+            </div>
+            <div class="td">0</div>
+            <div class="td">28</div>
+            <div class="td">45</div>
+            <div class="td total-td">73</div>
+          </div>
+
+          <!-- ROW 9 -->
+          <div class="table-grid table-row">
+            <div class="td rank-td">9</div>
+            <div class="td team-td">
+              <div class="team-crest">
+                <!-- TSG Army Shield -->
+                <svg viewBox="0 0 26 26" fill="none">
+                  <polygon points="13,2 23,6 20,18 13,24 6,18 3,6" fill="#1e293b" stroke="#ef4444" stroke-width="1.5" />
+                  <polygon points="13,6 15,11 20,11 16,14 18,19 13,16 8,19 10,14 6,11 11,11" fill="#ef4444" />
+                </svg>
+              </div>
+              <span class="team-name">TSG Army</span>
+            </div>
+            <div class="td">0</div>
+            <div class="td">27</div>
+            <div class="td">44</div>
+            <div class="td total-td">71</div>
+          </div>
+
+          <!-- ROW 10 -->
+          <div class="table-grid table-row">
+            <div class="td rank-td">10</div>
+            <div class="td team-td">
+              <div class="team-crest">
+                <!-- UG Empire Crown Shield -->
+                <svg viewBox="0 0 26 26" fill="none">
+                  <polygon points="13,2 23,7 19,20 13,24 7,20 3,7" fill="#171717" stroke="#eab308" stroke-width="1.5" />
+                  <path d="M8 15 L7 10 L10 12 L13 9 L16 12 L19 10 L18 15 Z" fill="#eab308" />
+                </svg>
+              </div>
+              <span class="team-name">UG Empire</span>
+            </div>
+            <div class="td">0</div>
+            <div class="td">26</div>
+            <div class="td">41</div>
+            <div class="td total-td">67</div>
+          </div>
+
+          <!-- ROW 11 -->
+          <div class="table-grid table-row">
+            <div class="td rank-td">11</div>
+            <div class="td team-td">
+              <div class="team-crest">
+                <!-- Rage Gaming 'R' -->
+                <svg viewBox="0 0 26 26" fill="none">
+                  <polygon points="13,2 23,6 20,19 13,24 6,19 3,6" fill="#18181b" />
+                  <path d="M8 7 H14 Q17 7 17 11 Q17 14 14 14 H10 V19 H8 Z M10 12 H13 Q15 12 15 11 Q15 9 13 9 H10 Z M13 14 L17 19 H14.5 L11.5 14 Z" fill="#dc2626" />
+                </svg>
+              </div>
+              <span class="team-name">Rage Gaming</span>
+            </div>
+            <div class="td">0</div>
+            <div class="td">24</div>
+            <div class="td">39</div>
+            <div class="td total-td">63</div>
+          </div>
+
+          <!-- ROW 12 -->
+          <div class="table-grid table-row">
+            <div class="td rank-td">12</div>
+            <div class="td team-td">
+              <div class="team-crest">
+                <!-- Team Hind 'H' Crest -->
+                <svg viewBox="0 0 26 26" fill="none">
+                  <polygon points="13,2 23,6 20,19 13,24 6,19 3,6" fill="#18181b" />
+                  <path d="M8 8 H11 V12 H15 V8 H18 V18 H15 V14 H11 V18 H8 Z" fill="#f97316" />
+                </svg>
+              </div>
+              <span class="team-name">Team Hind</span>
+            </div>
+            <div class="td">0</div>
+            <div class="td">22</div>
+            <div class="td">38</div>
+            <div class="td total-td">60</div>
+          </div>
+
+          <!-- ROW 13 -->
+          <div class="table-grid table-row">
+            <div class="td rank-td">13</div>
+            <div class="td team-td">
+              <div class="team-crest">
+                <!-- K9 Official Bulldog Shield -->
+                <svg viewBox="0 0 26 26" fill="none">
+                  <polygon points="13,2 23,6 19,19 13,24 7,19 3,6" fill="#111" stroke="#3b82f6" stroke-width="1.5" />
+                  <circle cx="10" cy="11" r="1.5" fill="#3b82f6" />
+                  <circle cx="16" cy="11" r="1.5" fill="#3b82f6" />
+                  <path d="M9 16 Q13 19 17 16" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round" fill="none" />
+                </svg>
+              </div>
+              <span class="team-name">K9 Official</span>
+            </div>
+            <div class="td">0</div>
+            <div class="td">21</div>
+            <div class="td">36</div>
+            <div class="td total-td">57</div>
+          </div>
+
+          <!-- ROW 14 -->
+          <div class="table-grid table-row">
+            <div class="td rank-td">14</div>
+            <div class="td team-td">
+              <div class="team-crest">
+                <!-- Team D Crest -->
+                <svg viewBox="0 0 26 26" fill="none">
+                  <polygon points="13,2 23,6 20,19 13,24 6,19 3,6" fill="#18181b" />
+                  <path d="M8 7 H13 Q17 7 17 13 Q17 19 13 19 H8 Z M10.5 9.5 V16.5 H12.5 Q14.5 16.5 14.5 13 Q14.5 9.5 12.5 9.5 Z" fill="#06b6d4" />
+                </svg>
+              </div>
+              <span class="team-name">Team D</span>
+            </div>
+            <div class="td">0</div>
+            <div class="td">18</div>
+            <div class="td">32</div>
+            <div class="td total-td">50</div>
+          </div>
+
+          <!-- ROW 15 -->
+          <div class="table-grid table-row">
+            <div class="td rank-td">15</div>
+            <div class="td team-td">
+              <div class="team-crest">
+                <!-- NXT Level Crest -->
+                <svg viewBox="0 0 26 26" fill="none">
+                  <polygon points="13,2 23,6 20,19 13,24 6,19 3,6" fill="#111" stroke="#10b981" stroke-width="1.5" />
+                  <path d="M8 16 L11 8 L14 14 L17 8 L19 16" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                </svg>
+              </div>
+              <span class="team-name">NXT Level</span>
+            </div>
+            <div class="td">0</div>
+            <div class="td">16</div>
+            <div class="td">30</div>
+            <div class="td total-td">46</div>
+          </div>
+
+          <!-- ROW 16 -->
+          <div class="table-grid table-row">
+            <div class="td rank-td">16</div>
+            <div class="td team-td">
+              <div class="team-crest">
+                <!-- Team Chaos Crest -->
+                <svg viewBox="0 0 26 26" fill="none">
+                  <polygon points="13,2 23,6 20,19 13,24 6,19 3,6" fill="#1c1917" stroke="#e11d48" stroke-width="1.5" />
+                  <path d="M7 10 L13 16 L19 10 M13 7 V18" stroke="#e11d48" stroke-width="2" stroke-linecap="round" />
+                </svg>
+              </div>
+              <span class="team-name">Team Chaos</span>
+            </div>
+            <div class="td">0</div>
+            <div class="td">12</div>
+            <div class="td">24</div>
+            <div class="td total-td">36</div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- FOOTER BAR -->
+      <footer class="footer">
+        <div class="footer-made-with">
+          <span class="made-with-label">Made with</span>
+          <img src="esportific-logo.png" alt="Esportific" class="esportific-brand-logo" />
+        </div>
+
+        <div class="footer-tagline" id="footer-tagline">
+          <span>Compete. Survive. </span>
+          <span class="booyah">Booyah!</span>
+        </div>
+      </footer>
+
+    </div>
+  </div>
+
+  <script>
+    // Automatic scale-to-fit script: ensures exact 4:5 ratio without ANY scrollbars at any screen size
+    function fitPoster() {
+      const poster = document.getElementById('poster');
+      if (!poster) return;
+      const targetW = 1080;
+      const targetH = 1350;
+      const availW = window.innerWidth;
+      const availH = window.innerHeight;
+      const scale = Math.min((availW - 16) / targetW, (availH - 16) / targetH);
+      poster.style.transform = `scale(${scale})`;
+    }
+
+    // Dynamic Game Logo and Tagline (BGMI vs Free Fire)
+    function applyGameBranding() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const game = (urlParams.get('game') || '').toLowerCase();
+      if (game.includes('bgmi') || game.includes('battlegrounds') || game.includes('pubg')) {
+        const logoImg = document.getElementById('game-logo-img');
+        if (logoImg) {
+          logoImg.src = 'bgmi-logo.png';
+          logoImg.alt = 'BGMI';
+          logoImg.style.height = '42px';
+        }
+        const tagline = document.getElementById('footer-tagline');
+        if (tagline) {
+          tagline.innerHTML = '<span>Winner Winner </span><span class="booyah">Chicken Dinner!</span>';
+        }
+      }
+    }
+
+    window.addEventListener('resize', fitPoster);
+    window.addEventListener('DOMContentLoaded', () => {
+      fitPoster();
+      applyGameBranding();
+    });
+    fitPoster();
+    applyGameBranding();
+  </script>
+</body>
+</html>

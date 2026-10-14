@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autumn Season Standings - Grand Arena Championship</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700;1,800&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'Bebas Neue Pro';
+      src: url('../../../../../../Fonts/Bebas Neue Pro/Bebas-Neue-Pro-Bold-BF66cf3d7770dfe.ttf') format('truetype'),
+           url('/Templates/Fonts/Bebas Neue Pro/Bebas-Neue-Pro-Bold-BF66cf3d7770dfe.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Bebas Neue Pro';
+      src: url('../../../../../../Fonts/Bebas Neue Pro/Bebas-Neue-Pro-Regular-BF66cf3d7814160.ttf') format('truetype'),
+           url('/Templates/Fonts/Bebas Neue Pro/Bebas-Neue-Pro-Regular-BF66cf3d7814160.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Bebas Neue Pro';
+      src: url('../../../../../../Fonts/Bebas Neue Pro/Bebas-Neue-Pro-Middle-BF66cf3d796ef6b.ttf') format('truetype'),
+           url('/Templates/Fonts/Bebas Neue Pro/Bebas-Neue-Pro-Middle-BF66cf3d796ef6b.ttf') format('truetype');
+      font-weight: 500;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Bebas Neue Pro';
+      src: url('../../../../../../Fonts/Bebas Neue Pro/Bebas-Neue-Pro-Book-BF66cf3d779e1f9.ttf') format('truetype'),
+           url('/Templates/Fonts/Bebas Neue Pro/Bebas-Neue-Pro-Book-BF66cf3d779e1f9.ttf') format('truetype');
+      font-weight: 600;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Bebas Neue Pro';
+      src: url('../../../../../../Fonts/Bebas Neue Pro/Bebas-Neue-Pro-Bold-BF66cf3d7770dfe.ttf') format('truetype'),
+           url('/Templates/Fonts/Bebas Neue Pro/Bebas-Neue-Pro-Bold-BF66cf3d7770dfe.ttf') format('truetype');
+      font-weight: 900;
+      font-style: normal;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #141414;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .viewport-wrapper {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Fixed Aspect 4:5 Poster Container with dynamic auto-fit */
+    .poster-canvas {
+      width: 1080px;
+      height: 1350px;
+      flex-shrink: 0;
+      transform-origin: center center;
+      transform: scale(min(calc((100vw - 20px) / 1080), calc((100vh - 20px) / 1350))) translateZ(0);
+      backface-visibility: hidden;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+      position: relative;
+      background-image: url('./Background.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.7);
+      user-select: none;
+    }
+
+    /* Content Area */
+    .content-wrapper {
+      padding: 85px 108px 30px 108px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Top Section: Header & Map */
+    .top-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-top: 0px;
+    }
+
+    /* Left Header */
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      margin-left: 55px;
+    }
+
+    .series-subtitle {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 2.8px;
+      color: #241d19;
+      text-transform: uppercase;
+      margin-bottom: 9px;
+    }
+
+    .tournament-title {
+      font-family: 'Bebas Neue Pro', sans-serif;
+      font-size: 38px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: #120e0c;
+      text-transform: uppercase;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+
+    .main-title {
+      font-family: 'Bebas Neue Pro', sans-serif;
+      font-size: 120px;
+      font-weight: 900;
+      line-height: 0.85;
+      letter-spacing: 1px;
+      color: #14100e;
+      -webkit-text-stroke: 1.5px #14100e;
+      text-transform: uppercase;
+      display: flex;
+      flex-direction: column;
+      margin-top: 2px;
+      margin-bottom: 12px;
+    }
+
+    .header-title-separator {
+      width: 100%;
+      height: 1px;
+      background: rgba(80, 60, 44, 0.8);
+      margin-top: 2px;
+      margin-bottom: 12px;
+    }
+
+    .meta-tags {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11.5px;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: #4b3e34;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .meta-tags .bold-val {
+      font-weight: 800;
+      color: #181310;
+    }
+
+    .meta-tags .slash {
+      color: #8c796b;
+      font-weight: 400;
+    }
+
+    /* Right Header: Match & Map */
+    .header-right {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 24px;
+      width: 236px;
+    }
+
+    .match-tag {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #1c1714;
+      margin-bottom: 4px;
+    }
+
+    .match-tag span {
+      color: #c0471f;
+    }
+
+    .map-sub-label {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 2.2px;
+      text-transform: uppercase;
+      color: #2a221d;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 7px;
+    }
+
+    .map-sub-label svg {
+      width: 10px;
+      height: 10px;
+      fill: #c0471f;
+    }
+
+    /* Map Parchment Card */
+    .map-card {
+      width: 100%;
+      height: 78px;
+      background: linear-gradient(135deg, rgba(247, 237, 222, 0.95) 0%, rgba(235, 219, 198, 0.95) 100%);
+      border: 1px solid rgba(175, 140, 102, 0.45);
+      border-radius: 4px;
+      box-shadow: 0 4px 14px rgba(70, 48, 25, 0.12), inset 0 0 10px rgba(180, 135, 85, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 16px;
+      gap: 14px;
+      position: relative;
+    }
+
+    .map-art {
+      width: 62px;
+      height: 48px;
+      flex-shrink: 0;
+    }
+
+    .map-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .map-name {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 34px;
+      font-weight: 800;
+      color: #181310;
+      line-height: 0.92;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .map-type {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 5.5px;
+      color: #bf471f;
+      text-transform: uppercase;
+      margin-top: 3px;
+    }
+
+    .match-results-count {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 2.2px;
+      color: #29211c;
+      text-transform: uppercase;
+      margin-top: 10px;
+    }
+
+    /* Leaderboard Table */
+    .table-container {
+      width: 100%;
+      margin-top: 28px;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid rgba(140, 108, 81, 0.5);
+      box-shadow: 0 6px 20px rgba(60, 40, 20, 0.08);
+    }
+
+    .table-grid {
+      display: grid;
+      grid-template-columns: 76px 1fr 85px 125px 155px 120px;
+      width: 100%;
+    }
+
+    /* Table Header */
+    .table-header {
+      height: 40px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 12.5px;
+      font-weight: 800;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      align-items: center;
+    }
+
+    .th-cell {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      background: #efd7b7;
+      color: #2e2219;
+      border-right: 1px solid rgba(185, 155, 122, 0.3);
+    }
+
+    .th-cell:last-child {
+      border-right: none;
+    }
+
+    .th-rank {
+      padding-left: 20px;
+    }
+
+    .th-team {
+      padding-left: 14px;
+    }
+
+    .th-center {
+      justify-content: center;
+    }
+
+    .th-total {
+      background: #b84e22;
+      color: #ffffff;
+      justify-content: center;
+      border-left: 1px solid rgba(0, 0, 0, 0.15);
+    }
+
+    /* Table Rows */
+    .table-row {
+      height: 45.5px;
+      position: relative;
+      border-top: 1px solid rgba(140, 108, 81, 0.5);
+    }
+
+    /* Alternating row styling */
+    .table-row.row-odd .td-cell:not(.td-total) {
+      background: #f8ead7;
+    }
+    .table-row.row-even .td-cell:not(.td-total) {
+      background: #f3e2ca;
+    }
+
+    /* Override top 3 rows: Row 2 (even) must be f8ead7 */
+    .table-row:nth-child(3) .td-cell:not(.td-total) {
+      background: #f8ead7;
+    }
+
+    .td-cell {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      color: #1a1614;
+    }
+
+    /* First row indicator */
+    .table-row.row-lead::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background-color: #c24b21;
+      z-index: 5;
+    }
+
+    .td-rank {
+      padding-left: 19px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 15.5px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    .table-row.row-lead .td-rank {
+      color: #c24b21;
+    }
+
+    .td-team {
+      padding-left: 12px;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .team-badge {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .team-badge svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .team-name {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: 0.6px;
+      color: #171310;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .td-center {
+      justify-content: center;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      font-size: 16.5px;
+      color: #1a1512;
+    }
+
+    .td-total {
+      justify-content: center;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 25px;
+      font-weight: 800;
+      color: #c0471f;
+      line-height: 1;
+      background: #f5e5ce;
+      border-left: 1px solid rgba(180, 148, 118, 0.35);
+    }
+
+    /* Made With Section */
+    .made-with-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: 24px;
+      gap: 8px;
+    }
+
+    .made-with-label {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #3b2e24;
+      text-transform: none;
+    }
+
+    .made-with-logo {
+      height: 32px;
+      max-height: 32px;
+      width: auto;
+      object-fit: contain;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="viewport-wrapper">
+    <div class="poster-canvas">
+    <div class="content-wrapper">
+
+      <!-- Top Header & Map Section -->
+      <div class="top-section">
+        <!-- Left Title Block -->
+        <div class="header-left">
+          <div class="tournament-title">Grand Arena Championship</div>
+          <div class="main-title">
+            <span>Overall</span>
+            <span>Standings</span>
+          </div>
+          <div class="header-title-separator"></div>
+          <div class="meta-tags">
+            <span>Game: <span class="bold-val">Free Fire</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Leaderboard Table -->
+      <div class="table-container">
+        <!-- Table Header -->
+        <div class="table-grid table-header">
+          <div class="th-cell th-rank">Rank</div>
+          <div class="th-cell th-team">Team</div>
+          <div class="th-cell th-center">Wins</div>
+          <div class="th-cell th-center">Kill Points</div>
+          <div class="th-cell th-center">Placement Points</div>
+          <div class="th-cell th-total">Total Points</div>
+        </div>
+
+        <!-- Row 1: Nexus (Leader) -->
+        <div class="table-grid table-row row-odd row-lead">
+          <div class="td-cell td-rank">&bull; 01</div>
+          <div class="td-cell td-team">
+            <div class="team-badge">
+              <!-- NEXUS Logo -->
+              <svg viewBox="0 0 40 40">
+                <rect x="2" y="2" width="36" height="36" rx="3" fill="none" stroke="#16120e" stroke-width="3"/>
+                <path d="M9 9 L31 31 M31 9 L9 31" stroke="#16120e" stroke-width="3.5" stroke-linecap="round"/>
+                <circle cx="20" cy="20" r="3.5" fill="#16120e"/>
+                <path d="M20 7 L20 13 M20 27 L20 33 M7 20 L13 20 M27 20 L33 20" stroke="#16120e" stroke-width="2"/>
+              </svg>
+            </div>
+            <span class="team-name">Nexus</span>
+          </div>
+          <div class="td-cell td-center">3</div>
+          <div class="td-cell td-center">44</div>
+          <div class="td-cell td-center">58</div>
+          <div class="td-cell td-total">102</div>
+        </div>
+
+        <!-- Row 2: Raven Core -->
+        <div class="table-grid table-row row-even">
+          <div class="td-cell td-rank">&bull; 02</div>
+          <div class="td-cell td-team">
+            <div class="team-badge">
+              <!-- RAVEN CORE Logo -->
+              <svg viewBox="0 0 40 40">
+                <path d="M22 6 C16 8 10 13 8 20 C6 26 8 32 12 36 C10 33 10 28 12 24 C13 22 15 21 17 21 C15 25 15 29 17 33 C18 31 19 28 20 25 C23 29 25 33 29 35 C27 30 27 25 28 21 C30 25 32 28 35 30 C34 25 34 21 33 17 C35 15 36 12 34 8 C30 7 26 5 22 6 Z" fill="#16120e"/>
+                <circle cx="24" cy="12" r="2" fill="#fff"/>
+              </svg>
+            </div>
+            <span class="team-name">Raven Core</span>
+          </div>
+          <div class="td-cell td-center">2</div>
+          <div class="td-cell td-center">42</div>
+          <div class="td-cell td-center">51</div>
+          <div class="td-cell td-total">93</div>
+        </div>
+
+        <!-- Row 3: Void Kings -->
+        <div class="table-grid table-row row-odd">
+          <div class="td-cell td-rank">&bull; 03</div>
+          <div class="td-cell td-team">
+            <div class="team-badge">
+              <!-- VOID KINGS Logo -->
+              <svg viewBox="0 0 40 40">
+                <path d="M5 14 L11 31 L29 31 L35 14 L26 21 L20 10 L14 21 Z" fill="none" stroke="#16120e" stroke-width="2.6" stroke-linejoin="round"/>
+                <polygon points="15,22 20,13 25,22 20,29" fill="#16120e"/>
+                <circle cx="5" cy="13" r="1.8" fill="#16120e"/>
+                <circle cx="20" cy="9" r="1.8" fill="#16120e"/>
+                <circle cx="35" cy="13" r="1.8" fill="#16120e"/>
+              </svg>
+            </div>
+            <span class="team-name">Void Kings</span>
+          </div>
+          <div class="td-cell td-center">2</div>
+          <div class="td-cell td-center">39</div>
+          <div class="td-cell td-center">47</div>
+          <div class="td-cell td-total">86</div>
+        </div>
+
+        <!-- Row 4: Apex Union -->
+        <div class="table-grid table-row row-even">
+          <div class="td-cell td-rank">&bull; 04</div>
+          <div class="td-cell td-team">
+            <div class="team-badge">
+              <!-- APEX UNION Logo -->
+              <svg viewBox="0 0 40 40">
+                <polygon points="20,4 36,34 4,34" fill="none" stroke="#16120e" stroke-width="3"/>
+                <path d="M12 28 L20 13 L28 28" fill="none" stroke="#16120e" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+                <line x1="14" y1="24" x2="26" y2="24" stroke="#16120e" stroke-width="2.5"/>
+              </svg>
+            </div>
+            <span class="team-name">Apex Union</span>
+          </div>
+          <div class="td-cell td-center">1</div>
+          <div class="td-cell td-center">38</div>
+          <div class="td-cell td-center">44</div>
+          <div class="td-cell td-total">82</div>
+        </div>
+
+        <!-- Row 5: Orbital -->
+        <div class="table-grid table-row row-odd">
+          <div class="td-cell td-rank">&bull; 05</div>
+          <div class="td-cell td-team">
+            <div class="team-badge">
+              <!-- ORBITAL Logo -->
+              <svg viewBox="0 0 40 40">
+                <circle cx="20" cy="20" r="9.5" fill="none" stroke="#16120e" stroke-width="2.5"/>
+                <ellipse cx="20" cy="20" rx="16" ry="6" transform="rotate(-30 20 20)" fill="none" stroke="#16120e" stroke-width="2.5"/>
+                <circle cx="20" cy="20" r="4.5" fill="#16120e"/>
+              </svg>
+            </div>
+            <span class="team-name">Orbital</span>
+          </div>
+          <div class="td-cell td-center">1</div>
+          <div class="td-cell td-center">36</div>
+          <div class="td-cell td-center">42</div>
+          <div class="td-cell td-total">78</div>
+        </div>
+
+        <!-- Row 6: Nova Vanguard -->
+        <div class="table-grid table-row row-even">
+          <div class="td-cell td-rank">&bull; 06</div>
+          <div class="td-cell td-team">
+            <div class="team-badge">
+              <!-- NOVA VANGUARD Logo -->
+              <svg viewBox="0 0 40 40">
+                <path d="M8 7 L32 7 L32 23 C32 30 20 36 20 36 C20 36 8 30 8 23 Z" fill="none" stroke="#16120e" stroke-width="2.5"/>
+                <path d="M14 28 L14 12 L20 22 L26 12 L26 28" fill="none" stroke="#16120e" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <span class="team-name">Nova Vanguard</span>
+          </div>
+          <div class="td-cell td-center">1</div>
+          <div class="td-cell td-center">34</div>
+          <div class="td-cell td-center">40</div>
+          <div class="td-cell td-total">74</div>
+        </div>
+
+        <!-- Row 7: Spectra -->
+        <div class="table-grid table-row row-odd">
+          <div class="td-cell td-rank">&bull; 07</div>
+          <div class="td-cell td-team">
+            <div class="team-badge">
+              <!-- SPECTRA Logo -->
+              <svg viewBox="0 0 40 40">
+                <polygon points="20,3 35,11 35,29 20,37 5,29 5,11" fill="#dfcaa8" stroke="#16120e" stroke-width="2.5"/>
+                <path d="M26 14 C26 12 23 10 20 10 C16 10 14 12 14 15 C14 19 26 18 26 23 C26 27 22 29 19 29 C15 29 13 27 13 24" fill="none" stroke="#16120e" stroke-width="3.2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <span class="team-name">Spectra</span>
+          </div>
+          <div class="td-cell td-center">0</div>
+          <div class="td-cell td-center">33</div>
+          <div class="td-cell td-center">38</div>
+          <div class="td-cell td-total">71</div>
+        </div>
+
+        <!-- Row 8: Trident -->
+        <div class="table-grid table-row row-even">
+          <div class="td-cell td-rank">&bull; 08</div>
+          <div class="td-cell td-team">
+            <div class="team-badge">
+              <!-- TRIDENT Logo -->
+              <svg viewBox="0 0 40 40">
+                <path d="M20 5 L20 35 M20 5 L16 12 L20 10 L24 12 Z" stroke="#16120e" stroke-width="2.4" fill="#16120e"/>
+                <path d="M10 11 L10 17 C10 24 20 27 20 27 C20 27 30 24 30 17 L30 11" fill="none" stroke="#16120e" stroke-width="2.4"/>
+                <polygon points="10,8 7,13 13,13" fill="#16120e"/>
+                <polygon points="30,8 27,13 33,13" fill="#16120e"/>
+              </svg>
+            </div>
+            <span class="team-name">Trident</span>
+          </div>
+          <div class="td-cell td-center">1</div>
+          <div class="td-cell td-center">29</div>
+          <div class="td-cell td-center">39</div>
+          <div class="td-cell td-total">68</div>
+        </div>
+
+        <!-- Row 9: Blackout -->
+        <div class="table-grid table-row row-odd">
+          <div class="td-cell td-rank">&bull; 09</div>
+          <div class="td-cell td-team">
+            <div class="team-badge">
+              <!-- BLACKOUT Logo -->
+              <svg viewBox="0 0 40 40">
+                <rect x="5" y="5" width="30" height="30" rx="6" fill="#16120e"/>
+                <text x="20" y="27" font-family="'Barlow Condensed', 'Montserrat', sans-serif" font-weight="900" font-size="22" fill="#fff" text-anchor="middle">B</text>
+              </svg>
+            </div>
+            <span class="team-name">Blackout</span>
+          </div>
+          <div class="td-cell td-center">0</div>
+          <div class="td-cell td-center">31</div>
+          <div class="td-cell td-center">34</div>
+          <div class="td-cell td-total">65</div>
+        </div>
+
+        <!-- Row 10: Echo Crew -->
+        <div class="table-grid table-row row-even">
+          <div class="td-cell td-rank">&bull; 10</div>
+          <div class="td-cell td-team">
+            <div class="team-badge">
+              <!-- ECHO CREW Logo -->
+              <svg viewBox="0 0 40 40">
+                <rect x="5" y="7" width="30" height="26" rx="4" fill="#16120e"/>
+                <text x="20" y="25" font-family="'Barlow Condensed', sans-serif" font-weight="900" font-size="16" fill="#fff" text-anchor="middle" letter-spacing="1">EC</text>
+              </svg>
+            </div>
+            <span class="team-name">Echo Crew</span>
+          </div>
+          <div class="td-cell td-center">0</div>
+          <div class="td-cell td-center">28</div>
+          <div class="td-cell td-center">34</div>
+          <div class="td-cell td-total">62</div>
+        </div>
+
+        <!-- Row 11: Primeforce -->
+        <div class="table-grid table-row row-odd">
+          <div class="td-cell td-rank">&bull; 11</div>
+          <div class="td-cell td-team">
+            <div class="team-badge">
+              <!-- PRIMEFORCE Logo -->
+              <svg viewBox="0 0 40 40">
+                <path d="M7 6 L33 6 L33 22 C33 29 20 35 20 35 C20 35 7 29 7 22 Z" fill="#16120e"/>
+                <path d="M12 10 L28 10 L28 20 C28 25 20 29 20 29 C20 29 12 25 12 20 Z" fill="#f4ebd9"/>
+                <text x="20" y="23" font-family="'Barlow Condensed', sans-serif" font-weight="900" font-size="13" fill="#16120e" text-anchor="middle">PF</text>
+              </svg>
+            </div>
+            <span class="team-name">Primeforce</span>
+          </div>
+          <div class="td-cell td-center">0</div>
+          <div class="td-cell td-center">26</div>
+          <div class="td-cell td-center">32</div>
+          <div class="td-cell td-total">58</div>
+        </div>
+
+        <!-- Row 12: Wildkard -->
+        <div class="table-grid table-row row-even">
+          <div class="td-cell td-rank">&bull; 12</div>
+          <div class="td-cell td-team">
+            <div class="team-badge">
+              <!-- WILDKARD Logo -->
+              <svg viewBox="0 0 40 40">
+                <circle cx="20" cy="20" r="16" fill="#16120e"/>
+                <text x="20" y="25" font-family="'Barlow Condensed', sans-serif" font-weight="900" font-size="14" fill="#fff" text-anchor="middle" letter-spacing="0.5">WK</text>
+              </svg>
+            </div>
+            <span class="team-name">Wildkard</span>
+          </div>
+          <div class="td-cell td-center">0</div>
+          <div class="td-cell td-center">24</div>
+          <div class="td-cell td-center">31</div>
+          <div class="td-cell td-total">55</div>
+        </div>
+
+        <!-- Row 13: Frostbite -->
+        <div class="table-grid table-row row-odd">
+          <div class="td-cell td-rank">&bull; 13</div>
+          <div class="td-cell td-team">
+            <div class="team-badge">
+              <!-- FROSTBITE Logo -->
+              <svg viewBox="0 0 40 40">
+                <path d="M20 5 L20 35 M7 12.5 L33 27.5 M7 27.5 L33 12.5" stroke="#16120e" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M20 9 L17 12 M20 9 L23 12 M20 31 L17 28 M20 31 L23 28" stroke="#16120e" stroke-width="2"/>
+                <circle cx="20" cy="20" r="3" fill="#16120e"/>
+              </svg>
+            </div>
+            <span class="team-name">Frostbite</span>
+          </div>
+          <div class="td-cell td-center">0</div>
+          <div class="td-cell td-center">23</div>
+          <div class="td-cell td-center">29</div>
+          <div class="td-cell td-total">52</div>
+        </div>
+
+        <!-- Row 14: Razor Army -->
+        <div class="table-grid table-row row-even">
+          <div class="td-cell td-rank">&bull; 14</div>
+          <div class="td-cell td-team">
+            <div class="team-badge">
+              <!-- RAZOR ARMY Logo -->
+              <svg viewBox="0 0 40 40">
+                <path d="M6 9 L34 9 L28 31 L8 31 Z" fill="none" stroke="#16120e" stroke-width="2.5"/>
+                <text x="19" y="25" font-family="'Barlow Condensed', sans-serif" font-weight="900" font-style="italic" font-size="16" fill="#16120e" text-anchor="middle">RZ</text>
+              </svg>
+            </div>
+            <span class="team-name">Razor Army</span>
+          </div>
+          <div class="td-cell td-center">0</div>
+          <div class="td-cell td-center">21</div>
+          <div class="td-cell td-center">26</div>
+          <div class="td-cell td-total">47</div>
+        </div>
+
+        <!-- Row 15: Onyx -->
+        <div class="table-grid table-row row-odd">
+          <div class="td-cell td-rank">&bull; 15</div>
+          <div class="td-cell td-team">
+            <div class="team-badge">
+              <!-- ONYX Logo -->
+              <svg viewBox="0 0 40 40">
+                <polygon points="10,10 30,10 36,18 20,33 4,18" fill="none" stroke="#16120e" stroke-width="2.5" stroke-linejoin="round"/>
+                <polyline points="4,18 20,22 36,18" stroke="#16120e" stroke-width="2" fill="none"/>
+                <line x1="20" y1="22" x2="20" y2="33" stroke="#16120e" stroke-width="2"/>
+                <line x1="10" y1="10" x2="20" y2="22" stroke="#16120e" stroke-width="1.8"/>
+                <line x1="30" y1="10" x2="20" y2="22" stroke="#16120e" stroke-width="1.8"/>
+              </svg>
+            </div>
+            <span class="team-name">Onyx</span>
+          </div>
+          <div class="td-cell td-center">0</div>
+          <div class="td-cell td-center">19</div>
+          <div class="td-cell td-center">24</div>
+          <div class="td-cell td-total">43</div>
+        </div>
+
+        <!-- Row 16: Gravity -->
+        <div class="table-grid table-row row-even">
+          <div class="td-cell td-rank">&bull; 16</div>
+          <div class="td-cell td-team">
+            <div class="team-badge">
+              <!-- GRAVITY Logo -->
+              <svg viewBox="0 0 40 40">
+                <polygon points="20,5 34,12 34,28 20,35 6,28 6,12" fill="none" stroke="#16120e" stroke-width="2.6"/>
+                <path d="M26 15 L16 15 L14 20 L24 20 L24 27 L15 27" fill="none" stroke="#16120e" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <span class="team-name">Gravity</span>
+          </div>
+          <div class="td-cell td-center">0</div>
+          <div class="td-cell td-center">17</div>
+          <div class="td-cell td-center">22</div>
+          <div class="td-cell td-total">39</div>
+        </div>
+      </div>
+
+      <!-- Made With Section -->
+      <div class="made-with-section">
+        <span class="made-with-label">Made with</span>
+        <img class="made-with-logo" src="../../../../../../../Brand/new-logo.png" alt="Esportific Logo" height="30" style="height: 30px; width: auto; max-height: 30px; object-fit: contain; display: block;" />
+      </div>
+
+    </div>
+  </div>
+  </div>
+
+  <script>
+    function fitPoster() {
+      const canvas = document.querySelector('.poster-canvas');
+      if (!canvas) return;
+      const inIframe = window.self !== window.top;
+      if (inIframe) {
+        document.body.style.backgroundColor = 'transparent';
+      }
+      const margin = inIframe ? 0 : 24;
+      const availW = window.innerWidth - margin;
+      const availH = window.innerHeight - margin;
+      const scale = Math.min(availW / 1080, availH / 1350);
+      canvas.style.transform = `scale(${scale}) translateZ(0)`;
+    }
+    window.addEventListener('resize', fitPoster);
+    window.addEventListener('DOMContentLoaded', fitPoster);
+    fitPoster();
+  </script>
+</body>
+</html>
