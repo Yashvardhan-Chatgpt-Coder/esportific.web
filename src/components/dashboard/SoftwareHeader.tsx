@@ -9,7 +9,6 @@ import {
   UserPlus,
   Swords,
   Database,
-  AlertCircle,
   Sparkles,
   Settings,
   CreditCard,

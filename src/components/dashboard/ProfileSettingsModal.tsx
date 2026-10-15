@@ -57,7 +57,6 @@ export function ProfileSettingsModal({ open, onOpenChange, isAdmin }: ProfileSet
   // Dynamic System States
   const [userId, setUserId] = useState("");
   const [createdAt, setCreatedAt] = useState("");
-  const [profileLoading, setProfileLoading] = useState(false);
 
   // UI States
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -110,7 +109,6 @@ export function ProfileSettingsModal({ open, onOpenChange, isAdmin }: ProfileSet
     if (!open) return;
 
     const loadProfile = async () => {
-      setProfileLoading(true);
       try {
         const profile = await authApi.getProfile();
         applyUserToForm(profile);
@@ -124,8 +122,6 @@ export function ProfileSettingsModal({ open, onOpenChange, isAdmin }: ProfileSet
           },
           { timeout: 4000 },
         );
-      } finally {
-        setProfileLoading(false);
       }
     };
 

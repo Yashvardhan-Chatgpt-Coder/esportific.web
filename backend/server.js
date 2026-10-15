@@ -5,6 +5,8 @@ const cors = require("cors");
 const compression = require("compression");
 
 const app = express();
+const MONGO_URI = process.env.MONGO_URI;
+let dbConnectionPromise;
 
 // Middleware
 app.use(compression({ threshold: 1024 }));
@@ -15,6 +17,27 @@ app.use("/api", (req, res, next) => {
   // revalidation enabled so unchanged responses can still return a small 304.
   res.setHeader("Cache-Control", "private, no-cache, must-revalidate");
   next();
+});
+
+// Vercel reuses this Express app as a function, so connect on demand and reuse
+// the Mongo connection across warm invocations. Local startup connects before
+// listening, while this middleware also covers cold serverless invocations.
+app.use(async (_req, _res, next) => {
+  if (mongoose.connection.readyState === 1) return next();
+  if (!MONGO_URI) return next(new Error("MONGO_URI is required"));
+
+  try {
+    if (mongoose.connection.readyState === 0 || !dbConnectionPromise) {
+      dbConnectionPromise = mongoose.connect(MONGO_URI).catch((error) => {
+        dbConnectionPromise = undefined;
+        throw error;
+      });
+    }
+    await dbConnectionPromise;
+    return next();
+  } catch (error) {
+    return next(error);
+  }
 });
 
 // Routes
@@ -46,15 +69,19 @@ app.use((err, req, res, next) => {
 });
 
 // Database Connection
-const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/esports_tool";
+module.exports = app;
 
-mongoose
-  .connect(MONGO_URI)
-  .then(() => {
-    console.log("Connected to MongoDB");
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-  })
-  .catch((err) => {
-    console.error("MongoDB connection error:", err);
-  });
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
+  const localMongoUri = MONGO_URI || "mongodb://localhost:27017/esports_tool";
+
+  mongoose
+    .connect(localMongoUri)
+    .then(() => {
+      console.log("Connected to MongoDB");
+      app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    })
+    .catch((err) => {
+      console.error("MongoDB connection error:", err);
+    });
+}

@@ -94,7 +94,6 @@ export async function exportStandingsToExcel({
   const firstDataRow = 12;
   const templateDataRowCount = 53;
   const lastDataRow = firstDataRow + rows.length - 1;
-  const extraRows = Math.max(0, rows.length - templateDataRowCount);
 
   worksheet.getCell("B5").value = eventName || "—";
   worksheet.getCell("B6").value = mode === "points" ? "Points Table" : "Top Shooters";

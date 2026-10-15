@@ -1,7 +1,6 @@
 import type {
   ApiEvent,
   ApiLeaderboardRow,
-  ApiMatch,
   ApiMatchResult,
   ApiScoringRule,
   ApiTeam,

@@ -216,8 +216,6 @@ export const StandingsTemplateRenderer = forwardRef<HTMLDivElement, StandingsTem
       discordHandle: dcProp,
       youtubeHandle: ytProp,
       scale = 1,
-      width,
-      height,
       className = "",
       style,
       rowCount = 12,

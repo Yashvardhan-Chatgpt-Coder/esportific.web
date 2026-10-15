@@ -9,6 +9,7 @@ router.post('/send-otp', authController.sendOtp);
 router.post('/register', authController.registerUser);
 router.post('/login', authController.loginUser);
 router.post('/admin/login', authController.loginAdmin);
+router.post('/google', authController.googleLogin);
 
 // Protected routes
 router.get('/profile', protect, authController.getUserProfile);

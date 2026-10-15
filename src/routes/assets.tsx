@@ -8,30 +8,16 @@ import {
   ChevronDown, 
   Plus, 
   Search, 
-  UserPlus, 
-  LayoutDashboard, 
-  Users, 
-  Swords, 
-  Trophy, 
   Settings, 
-  ArrowLeft,
   Pencil,
   Trash2,
   CheckCircle2,
-  Circle,
   MoreVertical,
   Download,
-  Upload,
-  X,
-  Lock,
   RefreshCw,
-  FileDown,
-  GripVertical,
   Bot
 } from "lucide-react";
-import { SoftwareHeader } from "@/components/dashboard/SoftwareHeader";
 import { GameLabel } from "@/components/dashboard/GameLabel";
-import { AppSidebar } from "@/components/dashboard/AppSidebar";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import * as Popover from "@radix-ui/react-popover";
 import { Command } from "cmdk";
@@ -441,17 +427,5 @@ export function AssetsDesignSystemContent() {
         </section>
       </div>
     </main>
-  );
-}
-
-function AssetsPage() {
-  return (
-    <div className="flex h-screen overflow-hidden bg-[#f7f8fb] text-[#000000]">
-      <AppSidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <SoftwareHeader title="Design System & Assets" />
-        <AssetsDesignSystemContent />
-      </div>
-    </div>
   );
 }

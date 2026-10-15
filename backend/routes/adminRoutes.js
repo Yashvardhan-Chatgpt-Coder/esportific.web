@@ -13,6 +13,7 @@ router.get("/users/:id/events", adminController.getUserEvents);
 router.get("/users/:id/teams", adminController.getUserTeams);
 router.get("/users/:id/scoring-rules", adminController.getUserScoringRules);
 router.get("/users/:id/logs", adminController.getUserLogs);
+router.delete("/users/:id", adminController.deleteUser);
 router.get("/users/:id", adminController.getUserById);
 router.get("/orphaned-assets", adminController.getOrphanedAssets);
 router.post("/orphaned-assets/cleanup", adminController.deleteOrphanedAssets);

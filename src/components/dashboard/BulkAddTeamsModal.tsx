@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { X, Plus, Trash2, CornerDownLeft } from "lucide-react";
+import { Plus, Trash2, CornerDownLeft } from "lucide-react";
 import { type Team } from "./AddTeamModal";
 import { type AddPoolTeamInput } from "./AddPoolTeamModal";
 import { PhoneNumberInput } from "@/components/dashboard/PhoneNumberInput";

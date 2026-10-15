@@ -57,13 +57,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     });
 
     if (res.status === 401 && typeof window !== "undefined") {
+      // A failed request must not silently sign the user out. Keep their local
+      // session so transient/server-side authorization failures do not redirect
+      // them to the login screen; explicit logout clears it in SoftwareHeader.
       clearApiResponseCache();
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      const loginPath = window.location.pathname.startsWith("/admin") ? "/admin/login" : "/login";
-      if (window.location.pathname !== loginPath) {
-        window.location.href = loginPath;
-      }
     }
 
     if (!res.ok) {
@@ -140,6 +137,11 @@ export const authApi = {
     request<ApiUser>("/auth/admin/login", {
       method: "POST",
       body: JSON.stringify(data),
+    }),
+  googleLogin: (credential: string, intent: "login" | "signup") =>
+    request<ApiUser>("/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ credential, intent }),
     }),
   getProfile: () => request<ApiUser>("/auth/profile"),
   updateProfile: (data: Partial<ApiUser>) => {
@@ -875,6 +877,8 @@ export const adminApi = {
       body: JSON.stringify(data),
     }),
   getUserById: (id: string) => request<ApiUser>(`/admin/users/${id}`),
+  deleteUser: (id: string) =>
+    request<{ message: string }>(`/admin/users/${id}`, { method: "DELETE" }),
   getUserEvents: (id: string) => request<ApiEvent[]>(`/admin/users/${id}/events`),
   getUserTeams: (id: string) => request<ApiTeam[]>(`/admin/users/${id}/teams`),
   getUserScoringRules: (id: string) =>

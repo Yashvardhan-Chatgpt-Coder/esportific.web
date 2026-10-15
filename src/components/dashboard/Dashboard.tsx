@@ -206,7 +206,7 @@ export function Dashboard() {
   }
 
   return (
-    <div className="mx-auto flex h-full min-h-0 w-full max-w-[1200px] flex-col gap-8 overflow-hidden p-8">
+    <div className="mx-auto flex h-full min-h-0 w-full max-w-[1200px] flex-col gap-6 overflow-hidden p-6">
       <div className="shrink-0">
         <h1 className="text-[28px] font-semibold tracking-tight text-[#000000]">
           {greeting}, {firstName}
@@ -221,7 +221,7 @@ export function Dashboard() {
       </div>
 
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[10px] border border-[#e2e5ec] bg-white">
-        <div className="flex shrink-0 items-center justify-between border-b border-[#f0f1f3] px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between border-b border-[#f0f1f3] px-6 py-3">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-[#666666]" />
             <h2 className="text-[16px] font-semibold text-[#000000]">Recent tournaments</h2>
@@ -233,9 +233,9 @@ export function Dashboard() {
             View all
           </Link>
         </div>
-        <div className="min-h-0 flex-1 overflow-auto">
+        <div className="min-h-0 flex-1 overflow-hidden">
           {recentTournaments.length > 0 ? (
-            <table className="w-full min-w-[680px] table-fixed text-left">
+            <table className="h-full w-full min-w-[680px] table-fixed text-left">
               <thead>
                 <tr className="bg-[#f9fbfc] text-[11px] font-medium uppercase tracking-wide text-[#8a93a3]">
                   <th className="w-[32%] px-4 py-2.5">Event</th>

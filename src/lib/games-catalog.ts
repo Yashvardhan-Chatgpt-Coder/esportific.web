@@ -61,7 +61,6 @@ export function apiGameToCatalogGame(game: {
   formats?: GameFormat[];
   updatedAt: string;
 }): CatalogGame {
-  const modes = game.modes || [];
   const formats = getCodeDefinedFormatsForGame(game.name);
   const codeLogo = getCodeDefinedGameLogo(game.name);
   return {

@@ -4,12 +4,8 @@ import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   ArrowLeft,
-  ArrowRight,
-  Calendar,
   CornerDownLeft,
-  Crown,
   Plus,
-  Swords,
   Users,
   Import,
 } from "lucide-react";
@@ -644,7 +640,6 @@ export function CreateEventModal({
 }) {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [data, setData] = useState<EventData>({ ...initialEventData });
   const [showDraftPrompt, setShowDraftPrompt] = useState(false);
   const [showAddTeamModal, setShowAddTeamModal] = useState(false);
@@ -777,7 +772,6 @@ export function CreateEventModal({
   };
 
   const handleCreate = async () => {
-    setIsSubmitting(true);
     try {
       const resolvedGameName = data.game === "Other" ? data.customGameName.trim() : data.game;
       const eventName = data.name.trim();
@@ -836,8 +830,6 @@ export function CreateEventModal({
         },
         { timeout: 6000 },
       );
-    } finally {
-      setIsSubmitting(false);
     }
   };
 

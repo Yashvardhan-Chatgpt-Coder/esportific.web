@@ -56,7 +56,6 @@ export async function exportMatchResultsToExcel(
 
   const firstDataRow = 10;
   const templateDataRowCount = 53;
-  const extraRows = Math.max(0, rows.length - templateDataRowCount);
   for (let index = templateDataRowCount; index < rows.length; index += 1) {
     const target = worksheet.getRow(firstDataRow + index);
     const styleSource = worksheet.getRow(index % 2 === 1 ? 13 : 14);

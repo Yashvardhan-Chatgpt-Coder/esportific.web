@@ -10,7 +10,6 @@ import {
   lazy,
   Suspense,
   type DragEvent,
-  type FormEvent,
   type ReactNode,
 } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -23,13 +22,10 @@ import { AppDropdownMenu } from "@/components/dashboard/AppDropdownMenu";
 import { AppPopupWindow } from "@/components/dashboard/AppPopupWindow";
 import {
   ArrowLeft,
-  Bot,
-  Calendar,
   CheckCircle2,
   ChevronDown,
   Circle,
   CornerDownLeft,
-  Download,
   FileDown,
   FileSpreadsheet,
   GripVertical,
@@ -39,7 +35,6 @@ import {
   Import,
   LayoutDashboard,
   Lock,
-  MoreVertical,
   Pencil,
   Plus,
   RefreshCw,
@@ -47,7 +42,6 @@ import {
   Search,
   Settings,
   SlidersHorizontal,
-  Sparkles,
   Swords,
   Trophy,
   Trash2,
@@ -66,7 +60,7 @@ import {
   ViewMatchResultsModal,
   type ResultEditContext,
 } from "@/components/dashboard/ViewMatchResultsModal";
-import { type ResultEntry, type TeamData } from "@/components/dashboard/AddResultModal";
+import { type ResultEntry } from "@/components/dashboard/AddResultModal";
 import { exportMatchResultsToExcel } from "@/lib/match-results-export";
 import { exportMatchResultsPlainImage } from "@/lib/match-results-export";
 
@@ -81,23 +75,12 @@ import { SidebarBrand } from "@/components/dashboard/SidebarBrand";
 import { SidebarCollapseButton } from "@/components/dashboard/SidebarCollapseButton";
 import { useSidebarCollapsed } from "@/hooks/use-sidebar-collapsed";
 import { GameIcon, GameLabel } from "@/components/dashboard/GameLabel";
-import {
-  DEFAULT_ORGANIZER_LOGO,
-  STANDINGS_TEMPLATE_HEIGHT,
-  STANDINGS_TEMPLATE_WIDTH,
-  StandingsTemplateRenderer,
-  StandingsTemplateViewport,
-  getStandingsTemplateMapOptions,
-  type StandingsExportView,
-  type StandingsTemplateRow,
-  type StandingsTemplateVisibleSocials,
-} from "@/components/dashboard/StandingsTemplateRenderer";
+import { getStandingsTemplateMapOptions, type StandingsExportView } from "@/components/dashboard/StandingsTemplateRenderer";
 import {
   AutumnSeasonStandingsRenderer,
   AutumnStandingsViewport,
   AUTUMN_TEMPLATE_WIDTH,
   AUTUMN_TEMPLATE_HEIGHT,
-  AUTUMN_TEMPLATE_BG_SRC,
   type AutumnSeasonTemplateRow,
 } from "@/components/dashboard/AutumnSeasonTemplate";
 import {
@@ -154,12 +137,9 @@ import { useCurrentUser } from "@/hooks/use-current-user";
 import { useEventWorkspace, type WorkspaceMatch } from "@/hooks/use-event-workspace";
 import {
   auditLogsApi,
-  authApi,
   eventsApi,
   eventTeamsExportApi,
   catalogApi,
-  matchesApi,
-  persistUser,
   scoringRulesApi,
   teamsApi,
   templatesApi,
@@ -174,20 +154,6 @@ import {
   getGameNameOptions,
   type CatalogGame,
 } from "@/lib/games-catalog";
-import {
-  getStoredHtmlTemplates,
-  type TemplateDocument as HtmlTemplateDocument,
-} from "@/lib/html-standings-template-engine";
-import {
-  LEGACY_BATTLE_ROYALE_POINTS_TEMPLATE,
-  PREMIUM_BATTLE_ROYALE_STANDINGS_TEMPLATE,
-  type TemplateDocument as FinalizedTemplateDocument,
-} from "@/lib/premium-standings-template-document";
-import {
-  PREMIUM_2_BATTLE_ROYALE_STANDINGS_TEMPLATE,
-  finalizePremium2StandingsTemplate,
-  isPremium2StandingsTemplate,
-} from "@/lib/premium-2-standings-template-document";
 import {
   apiTeamToPoolTeam,
   apiScoringRuleToTemplate,
@@ -764,7 +730,6 @@ function EventPage() {
                     poolTeams={workspace.poolTeams}
                     eventId={event.id}
                     eventName={event.name}
-                    organizerName={organizerName}
                     onTeamsChange={workspace.updateEventTeams}
                     onAuditLog={logAudit}
                   />
@@ -1192,7 +1157,6 @@ function TeamsTab({
   poolTeams,
   eventId,
   eventName,
-  organizerName,
   onTeamsChange,
   onAuditLog,
 }: {
@@ -1200,7 +1164,6 @@ function TeamsTab({
   poolTeams: import("@/lib/api").ApiTeam[];
   eventId: string;
   eventName: string;
-  organizerName: string;
   onTeamsChange: (teamIds: string[]) => Promise<void>;
   onAuditLog: AuditLogger;
 }) {
@@ -1990,7 +1953,7 @@ function TeamInfoModal({
 
   const addPlayerField = () => setPlayers((currentPlayers) => [...currentPlayers, ""]);
 
-  const handlePlayerKeyDown = (e: React.KeyboardEvent, index: number) => {
+  const handlePlayerKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.ctrlKey) {
       e.preventDefault();
       addPlayerField();
@@ -2155,7 +2118,7 @@ function TeamInfoModal({
                       type="text"
                       value={player}
                       onChange={(event) => updatePlayer(index, event.target.value)}
-                      onKeyDown={(e) => handlePlayerKeyDown(e, index)}
+                      onKeyDown={handlePlayerKeyDown}
                       placeholder={`Player ${index + 1}`}
                       className="h-[36px] flex-1 rounded-[8px] border border-[#e2e5ec] bg-white px-3 text-[13px] text-[#000000] outline-none placeholder:text-[#b0b7c4] focus:border-[#000000]"
                     />
@@ -2884,13 +2847,6 @@ function StandingsTab({
   const [selectedMatchNumber, setSelectedMatchNumber] = useState(1);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isExportingExcel, setIsExportingExcel] = useState(false);
-  const [backendPointRows, setBackendPointRows] = useState<
-    import("@/lib/api").ApiStandingsPointRow[]
-  >([]);
-  const [backendFraggerRows, setBackendFraggerRows] = useState<
-    import("@/lib/api").ApiStandingsFraggerRow[]
-  >([]);
-  const [standingsLoading, setStandingsLoading] = useState(false);
   const [templateExportOpen, setTemplateExportOpen] = useState(false);
 
   const activeScoringRule =
@@ -3025,13 +2981,6 @@ function StandingsTab({
     matchResults.find((match) => match.number === selectedMatchNumber) ?? matchResults[0];
   const tillMatchLimit = selectedMatch?.number ?? 0;
 
-  useEffect(() => {
-    setBackendPointRows([]);
-    setBackendFraggerRows([]);
-    setStandingsLoading(false);
-  }, [view, leaderboardType, selectedMatchNumber, selectedMatch]);
-
-  const overallRows = buildLeaderboard(matchResults.length);
   const tillMatchRows = buildLeaderboard(tillMatchLimit);
   const singleMatchRows = (selectedMatch?.rows ?? [])
     .map((row) => ({
@@ -3301,18 +3250,7 @@ function StandingsTab({
       </AnimatePresence>
 
       <AnimatePresence mode="wait" initial={false}>
-        {standingsLoading ? (
-          <motion.div
-            key="standings-loading"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-            className="flex flex-1 flex-col items-center justify-center rounded-[12px] border border-dashed border-[#d1d5db] bg-white px-6 py-20 text-center"
-          >
-            <GlobalPageLoader label="Loading standings" variant="section" />
-          </motion.div>
-        ) : !hasStandings ? (
+        {!hasStandings ? (
           <motion.div
             key={`standings-empty-${leaderboardType}-${view}-${selectedMatchNumber}`}
             initial={{ opacity: 0, y: 8 }}
@@ -3481,25 +3419,6 @@ function StandingsTab({
   );
 }
 
-type StandingsPointExportRow = {
-  rank: number;
-  team: string;
-  matchesPlayed: number;
-  wins: number;
-  positionPoints: number;
-  killPoints: number;
-  totalPoints: number;
-};
-
-type StandingsFraggerExportRow = {
-  rank: number;
-  player: string;
-  team: string;
-  matchesPlayed: number;
-  kills: number;
-  averageKills: number;
-};
-
 function textValue(value: unknown, fallback = "-") {
   if (value === null || value === undefined || value === "") return fallback;
   if (typeof value === "object") {
@@ -3516,12 +3435,6 @@ function numberValue(value: unknown, fallback = 0) {
 
 function objectValue(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
-}
-
-function versionedProfileImageUrl(src: string | null, version?: string | null) {
-  if (!src || src.startsWith("data:") || src.startsWith("blob:") || !version) return src;
-  const separator = src.includes("?") ? "&" : "?";
-  return `${src}${separator}v=${encodeURIComponent(version)}`;
 }
 
 const TRANSPARENT_EXPORT_IMAGE_PLACEHOLDER =
@@ -3760,10 +3673,6 @@ function StandingsTemplateExportModal({
     }
     return DEMO_AUTUMN_ROWS;
   }, [leaderboardType, previewPointRows, previewFraggerRows, teams]);
-
-  const anyTeamHasLogo = useMemo(() => {
-    return autumnRows.some((row) => Boolean(row.team && row.teamLogoSrc && String(row.teamLogoSrc).trim()));
-  }, [autumnRows]);
 
   const autumnTopShooterRows: TopShooterItem[] = useMemo(() => {
     if (previewFraggerRows.length > 0) {
@@ -4616,105 +4525,6 @@ function StandingsTemplateExportModal({
   );
 }
 
-
-const TEMPLATE_COLOR_PRESETS = [
-  "#ff6a00",
-  "#111111",
-  "#e11d48",
-  "#2563eb",
-  "#16a34a",
-  "#d97706",
-  "#7c3aed",
-  "#0891b2",
-];
-
-function normalizeHexColor(value: string) {
-  const trimmed = value.trim();
-  const withHash = trimmed.startsWith("#") ? trimmed : `#${trimmed}`;
-  return /^#[0-9a-fA-F]{6}$/.test(withHash) ? withHash : value;
-}
-
-function ThemedColorPicker({
-  value,
-  open,
-  onOpenChange,
-  onChange,
-  containerRef,
-}: {
-  value: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onChange: (value: string) => void;
-  containerRef: React.RefObject<HTMLDivElement | null>;
-}) {
-  return (
-    <div ref={containerRef} className="relative">
-      <button
-        type="button"
-        onClick={() => onOpenChange(!open)}
-        className="flex h-[42px] w-full cursor-pointer items-center justify-between rounded-[8px] border border-[#e2e5ec] bg-white px-3 text-left transition-colors hover:bg-[#f7f8fb]"
-      >
-        <span className="flex min-w-0 items-center gap-3">
-          <span
-            className="h-5 w-5 shrink-0 rounded-[5px] border border-black/10 shadow-inner"
-            style={{ background: value }}
-          />
-          <span className="truncate text-[13px] font-semibold uppercase text-[#000000]">
-            {value}
-          </span>
-        </span>
-        <ChevronDown
-          className={`h-4 w-4 text-[#9aa1b0] transition-transform ${open ? "rotate-180" : ""}`}
-        />
-      </button>
-
-      <AnimatePresence>
-        {open ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: -6 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: -6 }}
-            transition={{ duration: 0.16, ease: "easeOut" }}
-            className="absolute left-0 right-0 top-[48px] z-[120] rounded-[12px] border border-[#e2e5ec] bg-white p-3 shadow-[0_18px_48px_rgba(15,23,42,0.14)]"
-          >
-            <div className="grid grid-cols-4 gap-2">
-              {TEMPLATE_COLOR_PRESETS.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  onClick={() => {
-                    onChange(color);
-                    onOpenChange(false);
-                  }}
-                  className={`h-9 cursor-pointer rounded-[8px] border transition-transform hover:scale-[1.03] ${
-                    color.toLowerCase() === value.toLowerCase()
-                      ? "border-[#000000] ring-2 ring-black/10"
-                      : "border-[#e2e5ec]"
-                  }`}
-                  style={{ background: color }}
-                  aria-label={`Use ${color}`}
-                />
-              ))}
-            </div>
-
-            <div className="mt-3 flex items-center gap-2 border-t border-[#f0f1f3] pt-3">
-              <input
-                type="text"
-                value={value}
-                onChange={(event) => onChange(normalizeHexColor(event.target.value))}
-                className="h-[38px] min-w-0 flex-1 rounded-[8px] border border-[#e2e5ec] bg-white px-3 text-[13px] font-semibold uppercase text-[#000000] outline-none focus:border-[#000000]"
-              />
-              <span
-                className="h-[38px] w-[38px] shrink-0 rounded-[8px] border border-[#e2e5ec]"
-                style={{ background: value }}
-              />
-            </div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
-    </div>
-  );
-}
 
 function AuditLogsTab({ eventId }: { eventId: string }) {
   const [logs, setLogs] = useState<ApiAuditLog[]>([]);

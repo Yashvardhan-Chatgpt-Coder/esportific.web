@@ -20,7 +20,6 @@ function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -136,16 +135,7 @@ function AdminLogin() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-0.5 text-[12.5px]">
-                <label className="flex cursor-pointer items-center gap-2 text-zinc-600">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 cursor-pointer rounded border-zinc-300 accent-black focus:ring-black"
-                  />
-                  Remember Me
-                </label>
+              <div className="flex justify-end pt-0.5 text-[12.5px]">
                 <a href="#" className="font-semibold text-black hover:underline">
                   Forgot Your Password?
                 </a>

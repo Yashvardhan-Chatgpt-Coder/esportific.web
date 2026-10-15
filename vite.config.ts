@@ -6,16 +6,16 @@
 // You can pass additional config via defineConfig({ vite: { ... } }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-// Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-// @cloudflare/vite-plugin builds from this — wrangler.jsonc main alone is insufficient.
+if (process.env.VERCEL === "1" && !process.env.VITE_API_URL?.trim()) {
+  throw new Error("VITE_API_URL must be set in the Vercel frontend project before building.");
+}
+
 export default defineConfig({
-  tanstackStart: {
-    server: { entry: "server" },
-  },
+  nitro: { preset: "vercel" },
   vite: {
     build: {
       cssMinify: true,
-      minify: "esbuild",
+      minify: "oxc",
     },
   },
 });

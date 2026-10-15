@@ -15,6 +15,7 @@ import appCss from "../styles.css?url";
 import { MyToastRegion } from "@/components/ui/Toast";
 import { ExportProgressOverlay } from "@/components/ui/ExportProgressOverlay";
 import { getStoredUser, type ApiUser } from "@/lib/api";
+import { Smartphone } from "lucide-react";
 
 const applyInitialThemeScript = `(function(){try{var p=window.location.pathname;var auth=p==="/login"||p==="/signup"||p==="/admin/login";var u=JSON.parse(localStorage.getItem("user")||"null");var m=auth?"light":(u&&u.appearanceMode)||"system";var d=m==="dark"||(m==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);document.documentElement.dataset.appearanceMode=m;document.documentElement.dataset.esTheme=d?"dark":"light"}catch(_){}})();`;
 
@@ -144,10 +145,44 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeClassManager pathname={location.pathname} />
-      <Outlet />
-      <ExportProgressOverlay />
-      <MyToastRegion />
+      <div className="hidden md:block">
+        <Outlet />
+        <ExportProgressOverlay />
+        <MyToastRegion />
+      </div>
+      <MobileAccessNotice />
     </QueryClientProvider>
+  );
+}
+
+function MobileAccessNotice() {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] px-7 py-12 text-[#111111] md:hidden">
+      <section className="w-full max-w-[380px] text-center">
+        <img
+          src="/Brand/new-logo.png"
+          alt="Esportific"
+          className="mx-auto mb-12 h-11 w-auto object-contain"
+        />
+        <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-full bg-[#eceef2] text-[#4b5563]">
+          <Smartphone aria-hidden="true" className="h-[22px] w-[22px]" strokeWidth={1.7} />
+        </div>
+        <h1 className="text-[23px] font-semibold tracking-tight">Desktop access only</h1>
+        <p className="mt-3 text-[14px] leading-[1.7] text-[#69707d]">
+          The Esportific web dashboard is available on desktop. On your phone, use the Esportific
+          mobile app.
+        </p>
+        <button
+          type="button"
+          disabled
+          title="The mobile app link will be added here."
+          className="mt-8 inline-flex h-11 w-full cursor-not-allowed items-center justify-center rounded-[9px] bg-black px-5 text-[14px] font-semibold text-white"
+        >
+          Get the mobile app
+        </button>
+        <p className="mt-3 text-[12px] text-[#8a90a0]">App link will be added here.</p>
+      </section>
+    </main>
   );
 }
 

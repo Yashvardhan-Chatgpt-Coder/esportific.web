@@ -3,8 +3,6 @@
 @import "tw-animate-css";
 
 @source "../src";
-@source "../node_modules/@heroui/react/dist/**/*.{js,ts,jsx,tsx}";
-
 @font-face {
   font-family: "Bebas Neue Pro";
   src: url("/Templates/Fonts/Bebas%20Neue%20Pro/Bebas-Neue-Pro-Regular-BF66cf3d7814160.ttf") format("truetype");

@@ -86,7 +86,6 @@ export const GeneralTemplate2StandingsRenderer = forwardRef<HTMLDivElement, Gene
   function GeneralTemplate2StandingsRenderer(
     {
       eventName = "Reformers Connect",
-      eventSubtitle = "Youth Festival with Prince Obadiaba JNR",
       gameName = "Free Fire",
       rows = [],
       hue = 0,

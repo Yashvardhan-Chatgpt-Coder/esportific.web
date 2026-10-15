@@ -1,5 +1,9 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
+const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/User");
 const Otp = require("../models/Otp");
 const { Resend } = require("resend");
@@ -9,12 +13,23 @@ const { changed, createUserLog, requestContext } = require("../utils/userLogs");
 
 // Instantiate Resend with API Key from environment variables
 const resend = new Resend(process.env.RESEND_API_KEY);
+const otpSender = process.env.RESEND_FROM_EMAIL || "Esportific <noreply.esportific@rangrove.com>";
+const otpEmailTemplate = fs.readFileSync(path.join(__dirname, "../templates/otp-verification.html"), "utf8");
+const googleOAuthClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// Generate JWT (expires in 6 months as requested)
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: "180d",
-  });
+// Persistent sessions have no time-based expiry. They are revoked when the user
+// explicitly logs out, and remain valid across browser/app restarts.
+const generateToken = (id, sessionId) => {
+  return jwt.sign({ id, sid: sessionId }, process.env.JWT_SECRET);
+};
+
+async function createSessionToken(user) {
+  const sessionId = crypto.randomBytes(32).toString("hex");
+  await User.updateOne(
+    { _id: user._id },
+    { $push: { authSessions: { sessionId, createdAt: new Date() } } },
+  );
+  return generateToken(user._id, sessionId);
 };
 
 function extractPublicId(url) {
@@ -57,7 +72,7 @@ async function deleteCloudinaryUrl(url) {
   });
 }
 
-function userPayload(user, includeToken = false) {
+function userPayload(user, token = null) {
   const payload = {
     _id: user._id,
     name: user.name,
@@ -71,7 +86,7 @@ function userPayload(user, includeToken = false) {
       name: user.organization?.name || user.name || "",
       logo: user.organization?.logo || "",
     },
-    appearanceMode: user.appearanceMode || "system",
+    appearanceMode: user.appearanceMode || "light",
     integrations: {
       discordWebhookUrl: user.integrations?.discordWebhookUrl || "",
       twitchChannelUrl: user.integrations?.twitchChannelUrl || "",
@@ -80,7 +95,7 @@ function userPayload(user, includeToken = false) {
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
-  if (includeToken) payload.token = generateToken(user._id);
+  if (token) payload.token = token;
   return payload;
 }
 
@@ -114,7 +129,7 @@ const sendOtp = async (req, res) => {
     }
 
     // Generate a secure 6-digit OTP code
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = crypto.randomInt(100000, 1000000).toString();
 
     // Store/Update OTP document in database with automatic 5-min expiration
     await Otp.findOneAndUpdate(
@@ -123,66 +138,19 @@ const sendOtp = async (req, res) => {
       { upsert: true, new: true },
     );
 
-    // Send email using Resend
-    await resend.emails.send({
-      from: "Rangrove Esports <onboarding@resend.dev>",
+    const emailHtml = otpEmailTemplate.replace(/\{\{OTP\}\}/g, otp);
+    const { error: emailError } = await resend.emails.send({
+      from: otpSender,
       to: email,
-      subject: "Verify your Rangrove Account",
-      html: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verify your Email - Rangrove Esports</title>
-</head>
-<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">
-  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #fafafa; padding: 40px 16px;">
-    <tr>
-      <td align="center">
-        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 460px; background-color: #ffffff; border: 1px solid #e4e4e7; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-          
-          <!-- Top bar with brand logo styling -->
-          <tr>
-            <td style="padding: 32px 32px 16px 32px; border-bottom: 1px solid #f4f4f5; text-align: left;">
-              <span style="font-size: 16px; font-weight: 800; letter-spacing: 1.5px; color: #09090b; text-transform: uppercase;">RANGROVE</span>
-            </td>
-          </tr>
-
-          <!-- Main Body Content -->
-          <tr>
-            <td style="padding: 32px;">
-              <h2 style="margin: 0 0 10px 0; color: #09090b; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.25;">Verify your email</h2>
-              <p style="margin: 0 0 28px 0; color: #52525b; font-size: 14px; line-height: 1.5;">Thank you for registering an organizer account at Rangrove. Enter the 6-digit verification code below to complete your account setup:</p>
-              
-              <!-- Monochromatic Code Block Box -->
-              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 28px;">
-                <tr>
-                  <td align="center" style="background-color: #f4f4f5; border: 1px solid #e4e4e7; border-radius: 10px; padding: 20px; text-align: center;">
-                    <span style="font-family: 'Courier New', Courier, monospace; font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #09090b; line-height: 1; display: inline-block; margin-left: 8px;">${otp}</span>
-                  </td>
-                </tr>
-              </table>
-
-              <p style="margin: 0; color: #71717a; font-size: 13.5px; line-height: 1.5;">This verification code is valid for <strong>5 minutes</strong>. If you did not request this verification, you can safely ignore this email.</p>
-            </td>
-          </tr>
-
-          <!-- Footer Area -->
-          <tr>
-            <td style="padding: 24px 32px 32px 32px; background-color: #fafafa; border-top: 1px solid #e4e4e7; text-align: left;">
-              <p style="margin: 0; font-size: 11.5px; color: #a1a1aa; line-height: 1.5;">&copy; 2026 Rangrove Esports. Built for premium tournament hosts. All rights reserved.</p>
-            </td>
-          </tr>
-
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-      `,
+      subject: "Verify your Esportific account",
+      html: emailHtml,
     });
+
+    if (emailError) {
+      await Otp.deleteOne({ email, code: otp });
+      console.error("Resend OTP delivery failed:", emailError.message || "Unknown provider error");
+      return res.status(502).json({ message: "Failed to send verification code. Please try again shortly." });
+    }
 
     res.status(200).json({ message: "Verification code sent successfully" });
   } catch (error) {
@@ -226,6 +194,7 @@ const registerUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
+      appearanceMode: "light",
       organization: {
         name,
         logo: "",
@@ -246,7 +215,8 @@ const registerUser = async (req, res) => {
         metadata: { email: user.email },
       });
 
-      res.status(201).json(userPayload(user, true));
+      const token = await createSessionToken(user);
+      res.status(201).json(userPayload(user, token));
     } else {
       res.status(400).json({ message: "Invalid user data" });
     }
@@ -280,7 +250,8 @@ const loginUser = async (req, res) => {
         action: "logged_in",
         message: `Logged in from ${context.device}.`,
       });
-      res.json(userPayload(user, true));
+      const token = await createSessionToken(user);
+      res.json(userPayload(user, token));
     } else {
       res.status(401).json({ message: "Invalid email or password" });
     }
@@ -295,6 +266,12 @@ const loginUser = async (req, res) => {
 // @access  Private
 const logoutUser = async (req, res) => {
   try {
+    if (req.authSessionId) {
+      await User.updateOne(
+        { _id: req.user._id },
+        { $pull: { authSessions: { sessionId: req.authSessionId } } },
+      );
+    }
     if (req.user?.role !== "admin") {
       const context = requestContext(req);
       await createUserLog(req, {
@@ -326,10 +303,103 @@ const loginAdmin = async (req, res) => {
       return res.status(403).json({ message: "This login is only for admin accounts" });
     }
 
-    return res.json(userPayload(user, true));
+    const token = await createSessionToken(user);
+    return res.json(userPayload(user, token));
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
+  }
+};
+
+// @desc    Authenticate or register an organizer with Google Identity Services
+// @route   POST /api/auth/google
+// @access  Public
+const googleLogin = async (req, res) => {
+  try {
+    const { credential, intent = "login" } = req.body || {};
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+
+    if (!clientId) {
+      return res.status(503).json({ message: "Google sign-in is not configured on the server" });
+    }
+    if (typeof credential !== "string" || !credential) {
+      return res.status(400).json({ message: "Google did not return a sign-in credential" });
+    }
+    if (intent !== "login" && intent !== "signup") {
+      return res.status(400).json({ message: "Invalid Google sign-in request" });
+    }
+
+    let googleAccount;
+    try {
+      const ticket = await googleOAuthClient.verifyIdToken({ idToken: credential, audience: clientId });
+      googleAccount = ticket.getPayload();
+    } catch {
+      return res.status(401).json({ message: "Google sign-in could not be verified. Please try again." });
+    }
+
+    if (!googleAccount?.sub || !googleAccount.email || googleAccount.email_verified !== true) {
+      return res.status(401).json({ message: "Use a Google account with a verified email address." });
+    }
+
+    const email = googleAccount.email.toLowerCase().trim();
+    let user = await User.findOne({ googleId: googleAccount.sub });
+    let created = false;
+
+    if (!user) {
+      user = await User.findOne({ email });
+      if (user?.googleId && user.googleId !== googleAccount.sub) {
+        return res.status(409).json({ message: "This email is linked to a different Google account." });
+      }
+
+      if (!user && intent === "login") {
+        return res.status(404).json({ message: "No account found. Please sign up with Google first." });
+      }
+
+      if (!user) {
+        const generatedPassword = crypto.randomBytes(48).toString("base64url");
+        const password = await bcrypt.hash(generatedPassword, await bcrypt.genSalt(10));
+        user = await User.create({
+          name: googleAccount.name?.trim() || email.split("@")[0],
+          email,
+          password,
+          googleId: googleAccount.sub,
+          avatar: googleAccount.picture || "",
+          appearanceMode: "light",
+          organization: { name: googleAccount.name?.trim() || email.split("@")[0], logo: "" },
+          role: "organizer",
+        });
+        created = true;
+      } else if (user.role === "organizer") {
+        user.googleId = googleAccount.sub;
+        if (!user.avatar && googleAccount.picture) user.avatar = googleAccount.picture;
+        await user.save();
+      }
+    }
+
+    if (user.role !== "organizer") {
+      return res.status(403).json({ message: "Google sign-in is available for organizer accounts only." });
+    }
+
+    const context = requestContext(req);
+    await createUserLog(req, {
+      userId: user._id,
+      userName: user.name || user.email,
+      actorId: user._id,
+      actorName: user.name || user.email,
+      category: created ? "account" : "login",
+      action: created ? "account_created" : "logged_in",
+      message: created ? "Created account with Google." : `Logged in with Google from ${context.device}.`,
+      metadata: { email: user.email, provider: "google" },
+    });
+
+    const token = await createSessionToken(user);
+    return res.json(userPayload(user, token));
+  } catch (error) {
+    if (error?.code === 11000) {
+      return res.status(409).json({ message: "An account with this email already exists. Try signing in." });
+    }
+    console.error("Google sign-in failed:", error);
+    return res.status(500).json({ message: "Google sign-in failed. Please try again." });
   }
 };
 
@@ -509,7 +579,7 @@ const updateUserProfile = async (req, res) => {
         });
       }
 
-      res.json(userPayload(updatedUser, true));
+      res.json(userPayload(updatedUser));
     } else {
       res.status(404).json({ message: "User not found" });
     }
@@ -551,6 +621,7 @@ module.exports = {
   registerUser,
   loginUser,
   loginAdmin,
+  googleLogin,
   logoutUser,
   getUserProfile,
   updateUserProfile,

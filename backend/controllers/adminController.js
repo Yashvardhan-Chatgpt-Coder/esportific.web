@@ -4,9 +4,12 @@ const GameCatalog = require("../models/GameCatalog");
 const ScoringRule = require("../models/ScoringRule");
 const Event = require("../models/Event");
 const Match = require("../models/Match");
+const MatchResult = require("../models/MatchResult");
 const User = require("../models/User");
 const UserLog = require("../models/UserLog");
 const SupportRequest = require("../models/SupportRequest");
+const Notification = require("../models/Notification");
+const AuditLog = require("../models/AuditLog");
 const PlatformTemplate = require("../models/PlatformTemplate");
 const PlatformTemplateMigration = require("../models/PlatformTemplateMigration");
 const { CLOUDINARY_FOLDERS, CLOUDINARY_AUDIT_FOLDERS } = require("../utils/cloudinaryFolders");
@@ -332,6 +335,38 @@ exports.getUserById = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+exports.deleteUser = async (req, res) => {
+  try {
+    const user = await User.findOne({ _id: req.params.id, role: { $ne: "admin" } });
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    const teams = await Team.find({ organizerId: user._id }).select("logoUrl");
+    const teamLogoUrls = teams.map((team) => team.logoUrl).filter(Boolean);
+
+    // Remove owned records and records containing the user's personal data
+    // before deleting the account itself.
+    await Promise.all([
+      MatchResult.deleteMany({ organizerId: user._id }),
+      Match.deleteMany({ organizerId: user._id }),
+      Event.deleteMany({ organizerId: user._id }),
+      Team.deleteMany({ organizerId: user._id }),
+      ScoringRule.deleteMany({ organizerId: user._id }),
+      Notification.deleteMany({ userId: user._id }),
+      UserLog.deleteMany({ userId: user._id }),
+      AuditLog.deleteMany({ $or: [{ organizerId: user._id }, { userId: user._id }] }),
+      SupportRequest.deleteMany({ userId: user._id }),
+    ]);
+
+    await User.deleteOne({ _id: user._id });
+    await deleteCloudinaryUrls([user.avatar, user.organization?.logo, ...teamLogoUrls].filter(Boolean));
+
+    return res.json({ message: "User and associated account data deleted." });
+  } catch (error) {
+    console.error("Failed to delete user:", error);
+    return res.status(500).json({ message: "Could not complete user deletion. Please refresh and check the account before retrying." });
   }
 };
 

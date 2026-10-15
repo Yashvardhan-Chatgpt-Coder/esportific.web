@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Upload, X, Plus, Trash2, CornerDownLeft } from "lucide-react";
+import { Upload, Plus, Trash2, CornerDownLeft } from "lucide-react";
 import { queue } from "@/components/ui/Toast";
 import { PhoneNumberInput } from "@/components/dashboard/PhoneNumberInput";
 import { TeamPoolNameInput } from "@/components/dashboard/TeamPoolNameInput";
@@ -494,7 +494,7 @@ export function AddTeamModal({
 
   const addPlayerField = () => setPlayers([...players, ""]);
 
-  const handlePlayerKeyDown = (e: React.KeyboardEvent, index: number) => {
+  const handlePlayerKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.ctrlKey) {
       e.preventDefault();
       addPlayerField();
@@ -728,7 +728,7 @@ export function AddTeamModal({
                           playerInputsRef.current[index] = el;
                         }}
                         onChange={(value) => updatePlayer(index, value)}
-                        onEnterAdd={(event) => handlePlayerKeyDown(event, index)}
+                        onEnterAdd={handlePlayerKeyDown}
                       />
                       {players.length > 1 && (
                         <button

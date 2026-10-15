@@ -13,6 +13,7 @@ import {
   Mail,
   ShieldCheck,
   Swords,
+  Trash2,
   UserRound,
   Users,
 } from "lucide-react";
@@ -615,6 +616,10 @@ function AdminUserDetailPage() {
   const [logsLoaded, setLogsLoaded] =
     useState<Record<ApiUserLogCategory, boolean>>(emptyLoadedLogs);
   const [loadingLogType, setLoadingLogType] = useState<ApiUserLogCategory | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletePhrase, setDeletePhrase] = useState("");
+  const [deleteEmail, setDeleteEmail] = useState("");
+  const [deletingUser, setDeletingUser] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -742,6 +747,33 @@ function AdminUserDetailPage() {
     }
   };
 
+  const deleteConfirmed = Boolean(
+    user &&
+      deletePhrase === "DELETE" &&
+      deleteEmail.trim().toLowerCase() === user.email.toLowerCase(),
+  );
+
+  const deleteUser = async () => {
+    if (!user || !deleteConfirmed || deletingUser) return;
+    setDeletingUser(true);
+    try {
+      await adminApi.deleteUser(userId);
+      queue.add(
+        { title: "User deleted", description: `${user.name} and associated account data were deleted.`, variant: "success" },
+        { timeout: 4000 },
+      );
+      setDeleteDialogOpen(false);
+      await navigate({ to: "/admin/users" });
+    } catch (err) {
+      queue.add(
+        { title: "Could not delete user", description: err instanceof Error ? err.message : "Please try again.", variant: "error" },
+        { timeout: 5000 },
+      );
+    } finally {
+      setDeletingUser(false);
+    }
+  };
+
   return (
     <>
       <SoftwareHeader title="User details" variant="admin" />
@@ -828,6 +860,14 @@ function AdminUserDetailPage() {
                       onSelect: () => void showLogType(option.type),
                     }))}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setDeleteDialogOpen(true)}
+                    className="inline-flex h-8 items-center gap-2 rounded-[5px] border border-[#e2e5ec] bg-white px-3 text-[12px] font-semibold text-[#b42318] transition-colors hover:border-[#f0b4ae] hover:bg-[#fff7f6]"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete user
+                  </button>
                 </div>
               </div>
 
@@ -876,6 +916,79 @@ function AdminUserDetailPage() {
           userName={user.name}
           onOpenChange={setLogsModalOpen}
         />
+      ) : null}
+      {user ? (
+        <Dialog
+          open={deleteDialogOpen}
+          onOpenChange={(open) => {
+            if (deletingUser) return;
+            setDeleteDialogOpen(open);
+            if (!open) {
+              setDeletePhrase("");
+              setDeleteEmail("");
+            }
+          }}
+        >
+          <DialogContent
+            className="z-[90] max-h-[min(90vh,520px)] max-w-[420px] overflow-y-auto rounded-[12px] shadow-[0_16px_48px_rgba(0,0,0,0.14)]"
+            overlayClassName="z-[80] bg-black/35"
+          >
+            <DialogTitle className="sr-only">Permanently delete user</DialogTitle>
+            <div className="flex items-center gap-3 border-b border-[#f0f1f3] px-5 py-4">
+              <Trash2 className="h-4 w-4 shrink-0 text-[#666666]" />
+              <div>
+                <h2 className="text-[16px] font-semibold text-[#000000]">Delete user permanently</h2>
+                <p className="mt-0.5 text-[12px] text-[#666666]">This action cannot be undone.</p>
+              </div>
+            </div>
+            <div className="space-y-3 px-5 py-4">
+              <div>
+                <p className="text-[13px] font-semibold text-[#111111]">{user.name}</p>
+                <p className="break-all text-[12px] text-[#666666]">{user.email}</p>
+              </div>
+              <p className="text-[12px] leading-[18px] text-[#666666]">
+                This also deletes the user’s events, matches, teams, scoring rules, notifications, support requests, and logs.
+              </p>
+              <label className="block text-[11px] font-medium text-[#4b5563]">
+                Type <span className="font-semibold text-[#111111]">DELETE</span>
+                <input
+                  value={deletePhrase}
+                  onChange={(event) => setDeletePhrase(event.target.value)}
+                  autoComplete="off"
+                  className="mt-1 h-9 w-full rounded-[6px] border border-[#e2e5ec] bg-white px-3 text-[12px] text-[#111111] outline-none focus:border-[#9aa1b0]"
+                />
+              </label>
+              <label className="block text-[11px] font-medium text-[#4b5563]">
+                Enter the user’s email to confirm
+                <input
+                  value={deleteEmail}
+                  onChange={(event) => setDeleteEmail(event.target.value)}
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="mt-1 h-9 w-full rounded-[6px] border border-[#e2e5ec] bg-white px-3 text-[12px] text-[#111111] outline-none focus:border-[#9aa1b0]"
+                />
+              </label>
+            </div>
+            <div className="flex justify-end gap-2 border-t border-[#f0f1f3] px-5 py-3">
+              <button
+                type="button"
+                disabled={deletingUser}
+                onClick={() => setDeleteDialogOpen(false)}
+                className="h-8 rounded-[6px] border border-[#e2e5ec] px-3.5 text-[12px] font-medium text-[#4b5563] hover:bg-[#f7f8fb] disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!deleteConfirmed || deletingUser}
+                onClick={() => void deleteUser()}
+                className="h-8 rounded-[6px] bg-[#111111] px-3.5 text-[12px] font-medium text-white hover:bg-[#333333] disabled:cursor-not-allowed disabled:bg-[#d7d9de]"
+              >
+                {deletingUser ? "Deleting…" : "Permanently delete"}
+              </button>
+            </div>
+          </DialogContent>
+        </Dialog>
       ) : null}
     </>
   );
