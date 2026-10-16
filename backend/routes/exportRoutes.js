@@ -188,9 +188,6 @@ function createStandingsTemplate1Svg({ eventName, gameName, rows }) {
   const isBgmi = /bgmi|battlegrounds|pubg/i.test(gameName || '');
   const gameLogo = templateAssetData(isBgmi ? template1Bgmi : template1FreeFire, 'image/png');
   const brandLogo = templateAssetData(template1Brand, 'image/png');
-  const font = templateAssetData(template1Font, 'font/ttf');
-  const jakartaSemiBold = templateAssetData(template1JakartaSemiBold, 'font/ttf');
-  const jakartaBold = templateAssetData(template1JakartaBold, 'font/ttf');
   const titleFontSize = 128;
   const titleLetterSpacing = -2.8;
   const createLeagueGothicText = (text, startX, baseline, color) => {
@@ -208,7 +205,7 @@ function createStandingsTemplate1Svg({ eventName, gameName, rows }) {
   };
   const titleBlack = createLeagueGothicText('OVERALL', 50, 218, '#111111');
   const titleOrange = createLeagueGothicText('STANDINGS', 50 + titleBlack.width + 12, 218, '#ff5801');
-  const safeEventName = escapeXml(String(eventName || 'Event').slice(0, 50).toUpperCase());
+  const safeEventName = String(eventName || 'Event').slice(0, 50).toUpperCase();
   const paddedRows = [...rows.slice(0, 16)];
   while (paddedRows.length < 16) paddedRows.push({ rank: paddedRows.length + 1, team: '', wins: '', killPoints: '', placementPoints: '', totalPoints: '' });
   const headerIcon = (xPosition, pathData) => `<path d="${pathData}" transform="translate(${xPosition} 338) scale(.667)" fill="#ffffff"/>`;
@@ -229,46 +226,40 @@ function createStandingsTemplate1Svg({ eventName, gameName, rows }) {
   const body = paddedRows.map((row, index) => {
     const y = tableY + 50 + index * 48;
     const team = String(row.team || '').slice(0, 36);
-    const teamText = escapeXml(team.toUpperCase());
     const cellValue = (value) => value !== '' && value !== null && value !== undefined ? value : '-';
     const logo = row.logo ? `<image href="${row.logo}" x="${colStarts[1] + 16}" y="${y + 10}" width="28" height="28" preserveAspectRatio="xMidYMid meet"/>` : '';
-    const initial = team ? escapeXml(team.charAt(0).toUpperCase()) : '';
     return `<g>
       <rect x="${x}" y="${y}" width="980" height="48" fill="${index % 2 ? '#f0f2f5' : '#ffffff'}"/>
       <rect x="${x}" y="${y}" width="64" height="48" fill="#ff5801"/>
       <rect x="${colStarts[5]}" y="${y}" width="156" height="48" fill="#111113"/>
       <line x1="${x}" y1="${y + 47.5}" x2="${x + 980}" y2="${y + 47.5}" stroke="#d5d8de" stroke-width="1"/>
       ${templateTextPaths(template1BebasFont, row.rank ?? index + 1, x + 32, y + 31, 24, '#ffffff', { anchor: 'middle', letterSpacing: 0.5, strokeWidth: 0.55 })}
-      ${logo || (team ? `<rect x="${colStarts[1] + 16}" y="${y + 10}" width="28" height="28" rx="4" fill="#e5e7eb"/><text x="${colStarts[1] + 30}" y="${y + 29}" text-anchor="middle" class="initial">${initial}</text>` : '')}
-      <text x="${colStarts[1] + (team ? 56 : 16)}" y="${y + 29}" class="team">${teamText}</text>
-      ${[2, 3, 4].map((column, valueIndex) => `<line x1="${colStarts[column]}" y1="${y + 8}" x2="${colStarts[column]}" y2="${y + 40}" stroke="#d5d8de" stroke-width="1"/><text x="${(colStarts[column] + colStarts[column + 1]) / 2}" y="${y + 30}" text-anchor="middle" class="value">${escapeXml(cellValue([row.wins, row.killPoints, row.placementPoints][valueIndex]))}</text>`).join('')}
+      ${logo || (team ? `<rect x="${colStarts[1] + 16}" y="${y + 10}" width="28" height="28" rx="4" fill="#e5e7eb"/>${templateTextPaths(template1JakartaBoldFont, team.charAt(0).toUpperCase(), colStarts[1] + 30, y + 29, 13, '#374151', { anchor: 'middle' })}` : '')}
+      ${team ? templateTextPaths(template1JakartaBoldFont, team.toUpperCase(), colStarts[1] + 56, y + 29, 14.5, '#111111', { letterSpacing: 0.3, strokeWidth: 0.15 }) : ''}
+      ${[2, 3, 4].map((column, valueIndex) => `<line x1="${colStarts[column]}" y1="${y + 8}" x2="${colStarts[column]}" y2="${y + 40}" stroke="#d5d8de" stroke-width="1"/>${templateTextPaths(template1JakartaSemiFont, cellValue([row.wins, row.killPoints, row.placementPoints][valueIndex]), (colStarts[column] + colStarts[column + 1]) / 2, y + 30, 16, '#111111', { anchor: 'middle' })}`).join('')}
       ${templateTextPaths(template1BebasFont, cellValue(row.totalPoints), (colStarts[5] + colStarts[6]) / 2, y + 34, 31, '#ff5801', { anchor: 'middle', letterSpacing: 0.5, strokeWidth: 0.75 })}
     </g>`;
   }).join('');
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-    <defs><clipPath id="tableClip"><rect x="${x}" y="${tableY}" width="980" height="818" rx="14"/></clipPath><style>
-      @font-face{font-family:Bebas;src:url('${font}') format('truetype')}
-      @font-face{font-family:Jakarta;src:url('${jakartaSemiBold}') format('truetype');font-weight:600}
-      @font-face{font-family:Jakarta;src:url('${jakartaBold}') format('truetype');font-weight:700 900}
-      text{font-family:Jakarta,Arial,sans-serif;fill:#111}
-      .bebas{font-family:Bebas,'Arial Narrow',Arial,sans-serif;font-weight:normal}
-      .headerText{fill:white;font-size:13.5px;font-weight:800;letter-spacing:.5px}
-      .whiteText{fill:#fff}
-      .rank{font-size:24px;fill:white}
-      .team{font-size:14.5px;font-weight:700;letter-spacing:.3px}
-      .value{font-size:16px;font-weight:600}
-      .total{font-size:31px;fill:#ff5801}
-      .initial{font-size:13px;font-weight:bold;fill:#374151}
-    </style></defs>
+    <defs><clipPath id="tableClip"><rect x="${x}" y="${tableY}" width="980" height="818" rx="14"/></clipPath></defs>
     <image href="${templateAssetData(template1Background, 'image/png')}" x="0" y="0" width="1080" height="1350"/>
     <image href="${gameLogo}" x="50" y="42" width="240" height="42" preserveAspectRatio="xMinYMid meet"/>
       ${titleBlack.markup}${titleOrange.markup}
-    <g transform="translate(50 241) skewX(-18)"><rect width="${Math.min(800, Math.max(230, safeEventName.length * 11 + 30))}" height="34" fill="#ff5801"/><text x="14" y="23" class="whiteText" transform="skewX(18)" font-size="17" font-weight="800">${safeEventName}</text><path d="M${Math.min(800, Math.max(230, safeEventName.length * 11 + 30)) + 18},0 h6 l-8,34 h-6 z M${Math.min(800, Math.max(230, safeEventName.length * 11 + 30)) + 32},0 h6 l-8,34 h-6 z M${Math.min(800, Math.max(230, safeEventName.length * 11 + 30)) + 46},0 h6 l-8,34 h-6 z" fill="#ff5801"/></g>
+    <g transform="translate(50 241) skewX(-18)"><rect width="${Math.min(800, Math.max(230, safeEventName.length * 11 + 30))}" height="34" fill="#ff5801"/>${templateTextPaths(template1JakartaBoldFont, safeEventName, 14, 23, 17, '#ffffff', { strokeWidth: 0.2 })}<path d="M${Math.min(800, Math.max(230, safeEventName.length * 11 + 30)) + 18},0 h6 l-8,34 h-6 z M${Math.min(800, Math.max(230, safeEventName.length * 11 + 30)) + 32},0 h6 l-8,34 h-6 z M${Math.min(800, Math.max(230, safeEventName.length * 11 + 30)) + 46},0 h6 l-8,34 h-6 z" fill="#ff5801"/></g>
     <g clip-path="url(#tableClip)"><rect x="${x}" y="${tableY}" width="980" height="50" fill="#ff5801"/><rect x="${colStarts[5]}" y="${tableY}" width="156" height="50" fill="#111113"/>${headerCells}${body}</g>
     <rect x="${x}" y="${tableY}" width="980" height="818" rx="14" fill="none" stroke="#d5d8de" stroke-width="1.5"/>
-    <text x="54" y="1302" class="whiteText" font-family="Jakarta,Arial,sans-serif" font-size="15" font-weight="700" letter-spacing=".5">Made with</text>
+    ${templateTextPaths(template1JakartaBoldFont, 'Made with', 54, 1302, 15, '#ffffff', { letterSpacing: 0.5 })}
     <image href="${brandLogo}" x="54" y="1310" width="180" height="29" preserveAspectRatio="xMinYMid meet" filter="brightness(0) invert(1)"/>
-    <text x="1030" y="1310" text-anchor="end" font-size="15" font-weight="800" letter-spacing=".5" fill="#111113">${isBgmi ? 'WINNER WINNER' : 'COMPETE. SURVIVE.'} <tspan fill="#ff5801">${isBgmi ? 'CHICKEN DINNER!' : 'BOOYAH!'}</tspan></text>
+    ${(() => {
+      const lead = isBgmi ? 'WINNER WINNER' : 'COMPETE. SURVIVE.';
+      const accent = isBgmi ? 'CHICKEN DINNER!' : 'BOOYAH!';
+      const fontSize = 15;
+      const spacing = 0.5;
+      const leadWidth = template1JakartaBoldFont.layout(lead).positions.reduce((sum, position) => sum + position.xAdvance, 0) * fontSize / template1JakartaBoldFont.unitsPerEm + (lead.length - 1) * spacing;
+      const accentWidth = template1JakartaBoldFont.layout(accent).positions.reduce((sum, position) => sum + position.xAdvance, 0) * fontSize / template1JakartaBoldFont.unitsPerEm + (accent.length - 1) * spacing;
+      const startX = 1030 - leadWidth - 7 - accentWidth;
+      return `${templateTextPaths(template1JakartaBoldFont, lead, startX, 1310, fontSize, '#111113', { letterSpacing: spacing })}${templateTextPaths(template1JakartaBoldFont, accent, startX + leadWidth + 7, 1310, fontSize, '#ff5801', { letterSpacing: spacing })}`;
+    })()}
   </svg>`;
 }
 
@@ -621,18 +612,24 @@ function createStandingsTemplate5Svg({ eventName, rows }) {
   const brandLogo = templateAssetData(template5Brand, 'image/png');
   const gameLogo = templateAssetData(template5FreeFire, 'image/png');
   const titleFont = template5PermanentMarker;
+  // Sharp's SVG renderer may not have Arial installed (notably on Linux).
+  // Outline all template text with an app-bundled font so the mobile preview
+  // cannot degrade to missing-glyph boxes on devices or deployment hosts.
+  const tableFont = template1JakartaBoldFont;
+  const tableText = (text, x, y, size, color, options = {}) =>
+    templateTextPaths(tableFont, text, x, y, size, color, options);
   const titleMarkup = (text, centerX, baseline, size, maxWidth, color) => {
     const layout = titleFont.layout(String(text));
     const naturalWidth = layout.positions.reduce((sum, position) => sum + position.xAdvance, 0) * size / titleFont.unitsPerEm;
     return templateTextPaths(titleFont, text, centerX, baseline, size * Math.min(1, maxWidth / Math.max(naturalWidth, 1)), color, { anchor: 'middle', letterSpacing: 0.3 });
   };
   const header = [
-    `<text x="${columns[0] + columnWidths[0] / 2}" y="${tableY + 37}" text-anchor="middle" font-family="Arial,sans-serif" font-size="26" font-weight="900" fill="#fff">#</text>`,
-    `<g fill="#fff"><circle cx="${columns[1] + 91}" cy="${tableY + 25}" r="7"/><circle cx="${columns[1] + 108}" cy="${tableY + 23}" r="7"/><circle cx="${columns[1] + 125}" cy="${tableY + 25}" r="7"/><path d="M${columns[1] + 78} ${tableY + 42}c0-8 6-12 13-12s13 4 13 12zm25 0c0-7 6-11 13-11 7 0 13 4 13 11z"/></g><text x="${columns[1] + 144}" y="${tableY + 34}" font-family="Arial,sans-serif" font-size="18" font-weight="900" fill="#fff">TEAM</text>`,
-    `<g transform="translate(${columns[2] + 48} ${tableY + 17})" fill="#fff"><path d="M2 2h6v4h8V2h6v4c0 6-4 9-8 10v4h5v3H5v-3h5v-4C6 15 2 12 2 6z"/></g><text x="${columns[2] + 84}" y="${tableY + 35}" font-family="Arial,sans-serif" font-size="17" font-weight="900" fill="#fff">WINS</text>`,
-    `<g transform="translate(${columns[3] + 14} ${tableY + 17})" fill="none" stroke="#fff" stroke-width="3"><circle cx="11" cy="11" r="9"/><path d="M11 0v6m0 10v6M0 11h6m10 0h6"/></g><text x="${columns[3] + 73}" y="${tableY + 27}" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" font-weight="900" fill="#fff">KILL</text><text x="${columns[3] + 73}" y="${tableY + 43}" text-anchor="middle" font-family="Arial,sans-serif" font-size="12.5" font-weight="900" fill="#fff">POINTS</text>`,
-    `<path d="M${columns[4] + 18} ${tableY + 18}l12 5v8c0 8-6 12-12 14-6-2-12-6-12-14v-8z" fill="#fff"/><text x="${columns[4] + 91}" y="${tableY + 27}" text-anchor="middle" font-family="Arial,sans-serif" font-size="13.5" font-weight="900" fill="#fff">PLACEMENT</text><text x="${columns[4] + 91}" y="${tableY + 43}" text-anchor="middle" font-family="Arial,sans-serif" font-size="12.5" font-weight="900" fill="#fff">POINTS</text>`,
-    `<path d="M${columns[5] + 39} ${tableY + 15}l7 13 14 2-10 9 3 14-14-7-13 7 3-14-10-9 14-2z" transform="translate(0 -5) scale(.78)" fill="#fff"/><text x="${columns[5] + 94}" y="${tableY + 27}" text-anchor="middle" font-family="Arial,sans-serif" font-size="13.5" font-weight="900" fill="#fff">TOTAL</text><text x="${columns[5] + 94}" y="${tableY + 43}" text-anchor="middle" font-family="Arial,sans-serif" font-size="12.5" font-weight="900" fill="#fff">POINTS</text>`,
+    tableText('#', columns[0] + columnWidths[0] / 2, tableY + 37, 26, '#fff', { anchor: 'middle' }),
+    `<g fill="#fff"><circle cx="${columns[1] + 91}" cy="${tableY + 25}" r="7"/><circle cx="${columns[1] + 108}" cy="${tableY + 23}" r="7"/><circle cx="${columns[1] + 125}" cy="${tableY + 25}" r="7"/><path d="M${columns[1] + 78} ${tableY + 42}c0-8 6-12 13-12s13 4 13 12zm25 0c0-7 6-11 13-11 7 0 13 4 13 11z"/></g>${tableText('TEAM', columns[1] + 144, tableY + 34, 18, '#fff')}`,
+    `<g transform="translate(${columns[2] + 48} ${tableY + 17})" fill="#fff"><path d="M2 2h6v4h8V2h6v4c0 6-4 9-8 10v4h5v3H5v-3h5v-4C6 15 2 12 2 6z"/></g>${tableText('WINS', columns[2] + 84, tableY + 35, 17, '#fff')}`,
+    `<g transform="translate(${columns[3] + 14} ${tableY + 17})" fill="none" stroke="#fff" stroke-width="3"><circle cx="11" cy="11" r="9"/><path d="M11 0v6m0 10v6M0 11h6m10 0h6"/></g>${tableText('KILL', columns[3] + 73, tableY + 27, 15, '#fff', { anchor: 'middle' })}${tableText('POINTS', columns[3] + 73, tableY + 43, 12.5, '#fff', { anchor: 'middle' })}`,
+    `<path d="M${columns[4] + 18} ${tableY + 18}l12 5v8c0 8-6 12-12 14-6-2-12-6-12-14v-8z" fill="#fff"/>${tableText('PLACEMENT', columns[4] + 91, tableY + 27, 13.5, '#fff', { anchor: 'middle' })}${tableText('POINTS', columns[4] + 91, tableY + 43, 12.5, '#fff', { anchor: 'middle' })}`,
+    `<path d="M${columns[5] + 39} ${tableY + 15}l7 13 14 2-10 9 3 14-14-7-13 7 3-14-10-9 14-2z" transform="translate(0 -5) scale(.78)" fill="#fff"/>${tableText('TOTAL', columns[5] + 94, tableY + 27, 13.5, '#fff', { anchor: 'middle' })}${tableText('POINTS', columns[5] + 94, tableY + 43, 12.5, '#fff', { anchor: 'middle' })}`,
   ].join('');
   const body = paddedRows.map((row, index) => {
     const y = tableY + headerHeight + index * rowHeight;
@@ -641,14 +638,14 @@ function createStandingsTemplate5Svg({ eventName, rows }) {
     const teamLogoY = y + (rowHeight - 26) / 2;
     const logo = row.logo
       ? `<image href="${row.logo}" x="${teamLogoX}" y="${teamLogoY.toFixed(2)}" width="26" height="26" preserveAspectRatio="xMidYMid meet"/>`
-      : team ? `<rect x="${teamLogoX}" y="${teamLogoY.toFixed(2)}" width="26" height="26" rx="4" fill="#ead8c5"/><text x="${teamLogoX + 13}" y="${teamLogoY + 18}" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#4b3320">${escapeXml(team.charAt(0).toUpperCase())}</text>` : '';
+      : team ? `<rect x="${teamLogoX}" y="${teamLogoY.toFixed(2)}" width="26" height="26" rx="4" fill="#ead8c5"/>${tableText(team.charAt(0).toUpperCase(), teamLogoX + 13, teamLogoY + 18, 14, '#4b3320', { anchor: 'middle' })}` : '';
     const values = [row.wins, row.killPoints, row.placementPoints, row.totalPoints].map((value, offset) => {
       const col = offset + 2;
       const shown = value === '' || value === null || value === undefined ? '-' : String(value);
-      return `<text x="${columns[col] + columnWidths[col] / 2}" y="${y + 27}" text-anchor="middle" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="${col === 5 ? '#f06400' : '#18181a'}">${escapeXml(shown)}</text>`;
+      return tableText(shown, columns[col] + columnWidths[col] / 2, y + 27, 19, col === 5 ? '#f06400' : '#18181a', { anchor: 'middle' });
     }).join('');
     const name = team.toUpperCase();
-    return `<g><rect x="${x}" y="${y.toFixed(2)}" width="${tableWidth}" height="${rowHeight}" fill="${index % 2 ? '#ede4d5' : '#f7ede1'}"/><rect x="${x}" y="${y.toFixed(2)}" width="${columnWidths[0]}" height="${rowHeight}" fill="#f06400"/><rect x="${columns[5]}" y="${y.toFixed(2)}" width="${columnWidths[5]}" height="${rowHeight}" fill="#171719"/><line x1="${x}" y1="${(y + rowHeight).toFixed(2)}" x2="${x + tableWidth}" y2="${(y + rowHeight).toFixed(2)}" stroke="rgba(130,105,83,.35)" stroke-width="1"/><text x="${x + columnWidths[0] / 2}" y="${y + 27}" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" font-weight="700" fill="#fff">${row.rank ?? index + 1}</text>${logo}<text x="${columns[1] + (team ? 58 : 20)}" y="${y + 27}" font-family="Arial,sans-serif" font-size="16.5" font-weight="700" letter-spacing=".2" fill="#18181a">${escapeXml(name)}</text>${values}</g>`;
+    return `<g><rect x="${x}" y="${y.toFixed(2)}" width="${tableWidth}" height="${rowHeight}" fill="${index % 2 ? '#ede4d5' : '#f7ede1'}"/><rect x="${x}" y="${y.toFixed(2)}" width="${columnWidths[0]}" height="${rowHeight}" fill="#f06400"/><rect x="${columns[5]}" y="${y.toFixed(2)}" width="${columnWidths[5]}" height="${rowHeight}" fill="#171719"/><line x1="${x}" y1="${(y + rowHeight).toFixed(2)}" x2="${x + tableWidth}" y2="${(y + rowHeight).toFixed(2)}" stroke="rgba(130,105,83,.35)" stroke-width="1"/>${tableText(row.rank ?? index + 1, x + columnWidths[0] / 2, y + 27, 20, '#fff', { anchor: 'middle' })}${logo}${tableText(name, columns[1] + (team ? 58 : 20), y + 27, 16.5, '#18181a', { letterSpacing: 0.2 })}${values}</g>`;
   }).join('');
   const brushWidth = Math.max(340, Math.min(780, eventTitle.length * (eventTitle.length <= 10 ? 17 : 14.5) + 110));
   const leftDashes = `<g transform="translate(-46 10)" fill="#fba000"><polygon points="4,24 28,16 26,19 2,27"/><polygon points="10,36 34,31 32,34 8,39"/></g>`;
@@ -663,7 +660,7 @@ function createStandingsTemplate5Svg({ eventName, rows }) {
     <defs><clipPath id="template5TableClip"><rect x="${x}" y="${tableY}" width="${tableWidth}" height="${tableHeight}" rx="16"/></clipPath></defs>
     <g clip-path="url(#template5TableClip)"><rect x="${x}" y="${tableY}" width="${tableWidth}" height="${headerHeight}" fill="#ef4303"/><rect x="${columns[5]}" y="${tableY}" width="${columnWidths[5]}" height="${headerHeight}" fill="#171719"/>${header}${body}</g>
     <rect x="${x}" y="${tableY}" width="${tableWidth}" height="${tableHeight}" rx="16" fill="none" stroke="rgba(215,202,185,.55)" stroke-width="1.5"/>
-    <text x="${width / 2}" y="1285" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" font-weight="700" fill="#fff">Made With</text>
+    ${tableText('Made With', width / 2, 1285, 13, '#fff', { anchor: 'middle' })}
     <image href="${brandLogo}" x="${width / 2 - 82}" y="1292" width="164" height="34" preserveAspectRatio="xMidYMid meet"/>
   </svg>`;
 }
