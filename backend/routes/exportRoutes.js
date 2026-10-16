@@ -108,6 +108,17 @@ const template5Background = path.join(template5Directory, 'Background.png');
 const template5Brand = path.join(template5Directory, 'esportific-logo.png');
 const template5FreeFire = path.join(template5Directory, 'free-fire-white.png');
 const template5PermanentMarker = fontkit.openSync(path.join(template5Directory, 'PermanentMarker.ttf'));
+const topShooterAssetDirectory = path.resolve(__dirname, '../assets/top-shooters');
+const topShooterTemplates = [
+  { directory: path.join(topShooterAssetDirectory, 'general-1'), width: 1122, height: 1402 },
+  { directory: path.join(topShooterAssetDirectory, 'general-2'), width: 1122, height: 1402 },
+  { directory: path.join(topShooterAssetDirectory, 'autumn'), width: 1080, height: 1350 },
+].map((template) => ({
+  ...template,
+  background: path.join(template.directory, 'Background.png'),
+  gameLogo: path.join(template.directory, 'free-fire-logo.png'),
+  brandLogo: path.join(template.directory, 'esportific-logo.png'),
+}));
 const embeddedTemplateAssets = {};
 const templateLogoCache = new Map();
 function templateAssetData(pathname, mimeType) {
@@ -665,6 +676,120 @@ function createStandingsTemplate5Svg({ eventName, rows }) {
   </svg>`;
 }
 
+function createTopShootersTemplateSvg(templateNumber, { eventName, rows }) {
+  const template = topShooterTemplates[templateNumber - 1];
+  const background = templateAssetData(template.background, 'image/png');
+  const gameLogo = templateAssetData(template.gameLogo, 'image/png');
+  const brandLogo = templateAssetData(template.brandLogo, 'image/png');
+  const shooters = rows.slice(0, 5);
+  const playerLabel = (value) => String(value || '').trim().split(/\s+/).slice(0, 1).join('').toUpperCase();
+  const badge = (row, cx, y, size = 48, color = '#ffffff') => row.logo
+    ? `<image href="${row.logo}" x="${cx - size / 2}" y="${y}" width="${size}" height="${size}" preserveAspectRatio="xMidYMid meet"/>`
+    : `<circle cx="${cx}" cy="${y + size / 2}" r="${size / 2}" fill="${color}" fill-opacity=".16" stroke="${color}" stroke-opacity=".45"/>${templateTextPaths(template1JakartaBoldFont, String(row.team || '').trim().slice(0, 2).toUpperCase(), cx, y + size * .68, Math.max(11, size * .28), color, { anchor: 'middle' })}`;
+  const event = escapeXml(String(eventName || 'EVENT').trim().slice(0, 50).toUpperCase());
+  let content = '';
+
+  if (templateNumber === 1) {
+    const centers = [137, 351, 566, 778, 992];
+    content = shooters.map((row, index) => {
+      const cx = centers[index];
+      const player = playerLabel(row.player);
+      const nameFont = player.length > 10 ? 21 : 26;
+      return `<g>${templateTextPaths(template1JakartaBoldFont, player, cx, 899, nameFont, '#111827', { anchor: 'middle' })}${badge(row, cx, 931, 56, '#111827')}${templateTextPaths(template1JakartaBoldFont, String(row.team || '').toUpperCase().slice(0, 22), cx, 1013, 13, '#111827', { anchor: 'middle', letterSpacing: .25 })}${templateTextPaths(template1JakartaBoldFont, 'KILLS', cx, 1087, 16, '#334155', { anchor: 'middle', letterSpacing: 1 })}${templateTextPaths(template1BebasFont, row.kills, cx, 1166, 68, '#ff5801', { anchor: 'middle', letterSpacing: .5 })}</g>`;
+    }).join('');
+    const eventWidth = Math.min(760, Math.max(230, event.length * 11 + 42));
+    const lead = 'COMPETE. SURVIVE.';
+    const accent = 'BOOYAH!';
+    const footerSize = 15;
+    const advance = (text) => template1JakartaBoldFont.layout(text).positions.reduce((sum, item) => sum + item.xAdvance, 0) * footerSize / template1JakartaBoldFont.unitsPerEm + (text.length - 1) * .5;
+    const leadWidth = advance(lead);
+    const accentWidth = advance(accent);
+    const footerStart = 1070 - leadWidth - 7 - accentWidth;
+    content += `<g transform="translate(47 388) skewX(-24)"><rect width="${eventWidth}" height="36" fill="#ff5801"/>${templateTextPaths(template1JakartaBoldFont, event, 18, 24, 16.5, '#ffffff', { letterSpacing: .8 })}<path d="M${eventWidth + 12},2h6l-8,31h-6z M${eventWidth + 27},2h6l-8,31h-6z M${eventWidth + 42},2h6l-8,31h-6z" fill="#ff5801"/></g>${templateTextPaths(template1JakartaBoldFont, 'Made with', 54, 1341, 15, '#ffffff', { letterSpacing: .5 })}<image href="${brandLogo}" x="54" y="1346" width="180" height="29" preserveAspectRatio="xMinYMid meet" filter="brightness(0) invert(1)"/>${templateTextPaths(template1JakartaBoldFont, lead, footerStart, 1350, footerSize, '#111113', { letterSpacing: .5 })}${templateTextPaths(template1JakartaBoldFont, accent, footerStart + leadWidth + 7, 1350, footerSize, '#ff5801', { letterSpacing: .5 })}`;
+  } else if (templateNumber === 2) {
+    const slots = [
+      { cx: 133.5, index: 3, size: 68 }, { cx: 345.5, index: 1, size: 68 },
+      { cx: 563, index: 0, size: 82 }, { cx: 782.5, index: 2, size: 68 }, { cx: 992.5, index: 4, size: 68 },
+    ];
+    content = slots.map(({ cx, index, size }) => {
+      const row = shooters[index];
+      if (!row) return '';
+      const player = playerLabel(row.player);
+      return `<g>${templateTextPaths(template1JakartaBoldFont, player, cx, 949, player.length > 10 ? 20 : 24, '#111827', { anchor: 'middle' })}<line x1="${cx - 82}" y1="958" x2="${cx + 82}" y2="958" stroke="#dfd8cc" stroke-width="1.5"/>${badge(row, cx, 974, 48, '#111827')}${templateTextPaths(template1JakartaBoldFont, String(row.team || '').toUpperCase().slice(0, 21), cx, 1045, 13, '#111827', { anchor: 'middle', letterSpacing: .25 })}<line x1="${cx - 82}" y1="1057" x2="${cx + 82}" y2="1057" stroke="#dfd8cc" stroke-width="1.5"/>${templateTextPaths(template1JakartaBoldFont, 'KILLS', cx, 1101, 15, '#111827', { anchor: 'middle', letterSpacing: .8 })}${templateTextPaths(template1BebasFont, row.kills, cx, 1190, size, '#ff5801', { anchor: 'middle', letterSpacing: .5 })}</g>`;
+    }).join('');
+    content += `${templateTextPaths(template1JakartaBoldFont, event, template.width / 2, 435, 28, '#111827', { anchor: 'middle', letterSpacing: .5 })}<image href="${brandLogo}" x="52" y="1337" width="164" height="32" preserveAspectRatio="xMinYMid meet" filter="brightness(0) invert(1)"/>${templateTextPaths(template1JakartaSemiFont, 'Made With', 52, 1329, 16, '#ffffff', { letterSpacing: .3 })}`;
+  } else {
+    const cards = [
+      { index: 3, cx: 122, y: 970 }, { index: 1, cx: 321, y: 970 },
+      { index: 0, cx: 540, y: 960 }, { index: 2, cx: 760, y: 970 }, { index: 4, cx: 963, y: 970 },
+    ];
+    content = cards.map(({ index, cx, y }) => {
+      const row = shooters[index];
+      if (!row) return '';
+      const lines = String(row.player || '').trim().toUpperCase().split(/\s+/).filter(Boolean).slice(0, 2);
+      const isLeader = index === 0;
+      const firstBaseline = y + (lines.length > 1 ? 25 : 38);
+      const teamY = y + (lines.length > 1 ? 76 : 64);
+      return `<g filter="url(#shadow)">${lines.map((line, lineIndex) => templateTextPaths(template4BebasBold, line, cx, firstBaseline + lineIndex * (isLeader ? 29 : 26), isLeader ? 34 : 30, '#ffffff', { anchor: 'middle', letterSpacing: 1.4, strokeWidth: 1.2 })).join('')}${badge(row, cx - 45, teamY - 13, 19, '#ffffff')}${templateTextPaths(template1JakartaBoldFont, String(row.team || '').toUpperCase().slice(0, 20), cx + 5, teamY + 1, isLeader ? 12 : 11, '#ffffff', { anchor: 'middle', letterSpacing: .7 })}${templateTextPaths(template1JakartaBoldFont, 'KILLS', cx, y + 124, isLeader ? 14.5 : 13.5, '#c6c8cd', { anchor: 'middle', letterSpacing: 1.5 })}${templateTextPaths(template1BebasFont, row.kills, cx, y + 208, isLeader ? 80 : 68, '#ff6a00', { anchor: 'middle', letterSpacing: -.5, strokeWidth: 1 })}</g>`;
+    }).join('');
+    content += `${templateTextPaths(template1JakartaBoldFont, 'Made With', 540, 1279, 13, '#ffffff', { anchor: 'middle', letterSpacing: .6 })}<image href="${brandLogo}" x="458" y="1284" width="164" height="25" preserveAspectRatio="xMidYMid meet" filter="brightness(0) invert(1)"/>`;
+  }
+
+  const logoY = templateNumber === 3 ? 42 : templateNumber === 2 ? 36 : 32;
+  const logoWidth = templateNumber === 3 ? 220 : 220;
+  const logoHeight = templateNumber === 3 ? 38 : templateNumber === 2 ? 26 : 25;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${template.width}" height="${template.height}" viewBox="0 0 ${template.width} ${template.height}"><defs><filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity=".8"/></filter></defs><image href="${background}" x="0" y="0" width="${template.width}" height="${template.height}"/><image href="${gameLogo}" x="${templateNumber === 3 ? 45 : 52}" y="${logoY}" width="${logoWidth}" height="${logoHeight}" preserveAspectRatio="xMinYMid meet"/>${content}</svg>`;
+}
+
+const renderTopShootersTemplate = (templateNumber) => async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.eventId)) return res.status(400).json({ message: 'Invalid event id.' });
+    const query = { _id: req.params.eventId };
+    if (req.user.role !== 'admin') query.organizerId = req.user._id;
+    const event = await Event.findOne(query).populate('teams');
+    if (!event) return res.status(404).json({ message: 'Event not found.' });
+    if (!Array.isArray(req.body.rows) || req.body.rows.length > 100) return res.status(400).json({ message: 'Invalid shooter rows.' });
+    const teamByName = new Map((event.teams || []).filter(Boolean).map((team) => [String(team.name || '').trim().toLowerCase(), team]));
+    const rows = await Promise.all(req.body.rows.slice(0, 5).map(async (row, index) => {
+      const team = teamByName.get(String(row.team || '').trim().toLowerCase());
+      const rawLogo = team?.logoUrl ? await loadTemplateTeamLogo(team.logoUrl) : '';
+      return {
+        rank: Math.max(1, Math.min(999, Number(row.rank) || index + 1)),
+        player: String(row.player || '').slice(0, 80),
+        team: String(row.team || '').slice(0, 80),
+        kills: Math.max(0, Number(row.kills) || 0),
+        logo: rawLogo ? escapeXml(rawLogo) : '',
+      };
+    }));
+    if (!rows.length) return res.status(400).json({ message: 'There are no shooter results to export.' });
+    const svg = createTopShootersTemplateSvg(templateNumber, { eventName: req.body.eventName || event.name, rows });
+    let png = await sharp(Buffer.from(svg)).png().toBuffer();
+    const values = req.body.adjustments || {};
+    const adjustmentValue = (value, fallback) => {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    };
+    const hue = Math.max(0, Math.min(360, adjustmentValue(values.hue, 0)));
+    const brightness = Math.max(50, Math.min(150, adjustmentValue(values.brightness, 100)));
+    const saturation = Math.max(0, Math.min(200, adjustmentValue(values.saturation, 100)));
+    const contrast = Math.max(50, Math.min(150, adjustmentValue(values.contrast, 100)));
+    if (hue || brightness !== 100 || saturation !== 100 || contrast !== 100) {
+      png = await sharp(png).modulate({ hue, brightness, saturation }).linear(contrast / 100, 128 * (1 - contrast / 100)).png().toBuffer();
+    }
+    res.status(200);
+    res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store');
+    sendProgress(res, 0, 'Preparing top shooters');
+    sendProgress(res, 80, 'Rendering template');
+    const filename = `${safeFilename(event.name)}-top-shooters-template-${templateNumber}.png`;
+    res.write(`${JSON.stringify({ type: 'complete', progress: 100, filename, mimeType: 'image/png', file: png.toString('base64') })}\n`);
+    return res.end();
+  } catch (error) {
+    console.error('Top shooters template export failed:', error);
+    return res.status(500).json({ message: 'Could not generate this top shooters image.' });
+  }
+};
+
 const renderStandingsTemplate = (templateNumber) => async (req, res) => {
   try {
     if (!mongoose.isValidObjectId(req.params.eventId)) return res.status(400).json({ message: 'Invalid event id.' });
@@ -747,6 +872,9 @@ router.post('/events/:eventId/standings-template-2', renderStandingsTemplate(2))
 router.post('/events/:eventId/standings-template-3', renderStandingsTemplate(3));
 router.post('/events/:eventId/standings-template-4', renderStandingsTemplate(4));
 router.post('/events/:eventId/standings-template-5', renderStandingsTemplate(5));
+router.post('/events/:eventId/top-shooters-template-1', renderTopShootersTemplate(1));
+router.post('/events/:eventId/top-shooters-template-2', renderTopShootersTemplate(2));
+router.post('/events/:eventId/top-shooters-template-3', renderTopShootersTemplate(3));
 
 router.post('/events/:eventId/teams-export', async (req, res) => {
   try {
