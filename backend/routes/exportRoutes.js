@@ -40,36 +40,43 @@ function createTeamsSvg(event, teams, organizerName) {
   const tableY = 290;
   const headerHeight = 62;
   const rowHeight = teams.length > 12 ? 51 : 54;
+  const organizerPrefix = 'Organized by ';
+  const organizerNameText = String(organizerName || '');
+  const organizerPrefixWidth = template1JakartaSemiFont.layout(organizerPrefix).positions
+    .reduce((sum, position) => sum + position.xAdvance, 0) * 18 / template1JakartaSemiFont.unitsPerEm;
+  const organizerNameWidth = template1JakartaBoldFont.layout(organizerNameText).positions
+    .reduce((sum, position) => sum + position.xAdvance, 0) * 18 / template1JakartaBoldFont.unitsPerEm;
+  const organizerStartX = width - x - organizerPrefixWidth - organizerNameWidth;
   const rows = teams.map((team, index) => {
     const y = tableY + headerHeight + index * rowHeight;
     const players = (team.players || []).map((player) => player.name).filter(Boolean).join(', ') || 'No players listed';
     const fill = index % 2 ? '#f7f8fb' : '#ffffff';
     return `
       <rect x="${x}" y="${y}" width="${tableWidth}" height="${rowHeight}" fill="${fill}" stroke="#e2e5ec" stroke-width="1"/>
-      <text x="${x + 52}" y="${y + 33}" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#080808">${escapeXml(index + 1)}</text>
-      <text x="${x + 112}" y="${y + 32}" font-family="Arial, sans-serif" font-size="17" font-weight="700" fill="#080808">${escapeXml(String(team.name || '').toUpperCase().slice(0, 25))}</text>
-      <text x="${x + 375}" y="${y + 31}" font-family="Arial, sans-serif" font-size="14" font-weight="500" fill="#343a46">${escapeXml(players.slice(0, 72))}</text>`;
+      ${templateTextPaths(template1JakartaBoldFont, String(index + 1), x + 52, y + 33, 18, '#080808', { anchor: 'middle' })}
+      ${templateTextPaths(template1JakartaBoldFont, String(team.name || '').toUpperCase().slice(0, 25), x + 112, y + 32, 17, '#080808')}
+      ${templateTextPaths(template1JakartaSemiFont, players.slice(0, 72), x + 375, y + 31, 14, '#343a46')}`;
   }).join('');
   const tableBottom = tableY + headerHeight + teams.length * rowHeight;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
     <rect width="100%" height="100%" fill="#ffffff"/>
-    <text x="${x}" y="145" font-family="Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="1.5" fill="#666666">${escapeXml(String(event.name || 'Event').toUpperCase())}  •  PARTICIPATING TEAMS</text>
-    <text x="${x}" y="210" font-family="Arial, sans-serif" font-size="52" font-weight="800" fill="#080808">Team Roster</text>
-    ${organizerName ? `<text x="${width - x}" y="207" text-anchor="end" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="#666666">Organized by <tspan font-weight="800" fill="#080808">${escapeXml(organizerName)}</tspan></text>` : ''}
+    ${templateTextPaths(template1JakartaBoldFont, `${String(event.name || 'Event').toUpperCase()}  ·  PARTICIPATING TEAMS`, x, 145, 20, '#666666', { letterSpacing: 1.5 })}
+    ${templateTextPaths(template1JakartaBoldFont, 'Team Roster', x, 210, 52, '#080808')}
+    ${organizerName ? `${templateTextPaths(template1JakartaSemiFont, organizerPrefix, organizerStartX, 207, 18, '#666666')}${templateTextPaths(template1JakartaBoldFont, organizerNameText, organizerStartX + organizerPrefixWidth, 207, 18, '#080808')}` : ''}
     <defs><clipPath id="team-table-clip"><rect x="${x}" y="${tableY}" width="${tableWidth}" height="${headerHeight + teams.length * rowHeight}" rx="14"/></clipPath></defs>
     <g clip-path="url(#team-table-clip)">
       <rect x="${x}" y="${tableY}" width="${tableWidth}" height="${headerHeight}" fill="#080808"/>
-      <text x="${x + 52}" y="${tableY + 39}" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">SLOT NO.</text>
-      <text x="${x + 112}" y="${tableY + 39}" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#ffffff">TEAM</text>
-      <text x="${x + 375}" y="${tableY + 39}" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#ffffff">PLAYERS</text>
+      ${templateTextPaths(template1JakartaBoldFont, 'SLOT NO.', x + 52, tableY + 39, 15, '#ffffff', { anchor: 'middle' })}
+      ${templateTextPaths(template1JakartaBoldFont, 'TEAM', x + 112, tableY + 39, 22, '#ffffff')}
+      ${templateTextPaths(template1JakartaBoldFont, 'PLAYERS', x + 375, tableY + 39, 22, '#ffffff')}
       ${rows}
     </g>
     <rect x="${x}" y="${tableY}" width="${tableWidth}" height="${tableBottom - tableY}" rx="14" fill="none" stroke="#e2e5ec" stroke-width="1.5"/>
     <line x1="${x}" y1="1250" x2="${width - x}" y2="1250" stroke="#e2e5ec" stroke-width="1.5"/>
-    <text x="${x}" y="1300" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#666666">Made With</text>
-    <text x="${x + 116}" y="1300" font-family="Arial, sans-serif" font-size="25" font-style="italic" font-weight="900" fill="#f21d49">esportific</text>
-    <text x="${width - x}" y="1300" text-anchor="end" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#666666">${teams.length}${event.teams.length > teams.length ? ` of ${event.teams.length}` : ''} ${teams.length === 1 ? 'team' : 'teams'}</text>
+    ${templateTextPaths(template1JakartaBoldFont, 'Made With', x, 1300, 20, '#666666')}
+    ${templateTextPaths(template1JakartaBoldFont, 'esportific', x + 116, 1300, 25, '#f21d49')}
+    ${templateTextPaths(template1JakartaBoldFont, `${teams.length}${event.teams.length > teams.length ? ` of ${event.teams.length}` : ''} ${teams.length === 1 ? 'team' : 'teams'}`, width - x, 1300, 20, '#666666', { anchor: 'end' })}
   </svg>`;
 }
 
@@ -172,8 +179,15 @@ function loadTemplateTeamLogo(url) {
   });
 }
 
+function templateSafeText(font, value) {
+  const fallback = font.hasGlyphForCodePoint(63) ? '?' : ' ';
+  return Array.from(String(value ?? ''), (character) => (
+    font.hasGlyphForCodePoint(character.codePointAt(0)) ? character : fallback
+  )).join('');
+}
+
 function templateTextPaths(font, text, x, baseline, fontSize, color, { anchor = 'start', letterSpacing = 0, strokeWidth = 0 } = {}) {
-  const layout = font.layout(String(text));
+  const layout = font.layout(templateSafeText(font, text));
   const scale = fontSize / font.unitsPerEm;
   const width = layout.positions.reduce((sum, position) => sum + position.xAdvance * scale, 0)
     + Math.max(0, layout.positions.length - 1) * letterSpacing;
@@ -188,7 +202,7 @@ function templateTextPaths(font, text, x, baseline, fontSize, color, { anchor = 
   }).join('');
 }
 
-function createStandingsTemplate1Svg({ eventName, gameName, rows }) {
+function createStandingsTemplate1Svg({ eventName, gameName, rows, title }) {
   const width = 1080;
   const height = 1350;
   const x = 50;
@@ -214,8 +228,8 @@ function createStandingsTemplate1Svg({ eventName, gameName, rows }) {
     });
     return { width: cursor - startX, markup: paths.join('') };
   };
-  const titleBlack = createLeagueGothicText('OVERALL', 50, 218, '#111111');
-  const titleOrange = createLeagueGothicText('STANDINGS', 50 + titleBlack.width + 12, 218, '#ff5801');
+  const titleBlack = createLeagueGothicText(title === 'MATCH RESULTS' ? 'MATCH' : 'OVERALL', 50, 218, '#111111');
+  const titleOrange = createLeagueGothicText(title === 'MATCH RESULTS' ? 'RESULTS' : 'STANDINGS', 50 + titleBlack.width + 12, 218, '#ff5801');
   const safeEventName = String(eventName || 'Event').slice(0, 50).toUpperCase();
   const paddedRows = [...rows.slice(0, 16)];
   while (paddedRows.length < 16) paddedRows.push({ rank: paddedRows.length + 1, team: '', wins: '', killPoints: '', placementPoints: '', totalPoints: '' });
@@ -290,7 +304,7 @@ function createStandingsTemplate2Svg({ eventName, gameName, rows }) {
   const brandLogo = templateAssetData(template2Brand, 'image/png');
 
   // Lay out the event name along the template's quadratic title arch.
-  const layout = template2Font.layout(safeEventName || 'Event');
+  const layout = template2Font.layout(templateSafeText(template2Font, safeEventName || 'Event'));
   const curveScale = Math.min(46 / template2Font.unitsPerEm, 680 / Math.max(1, layout.positions.reduce((sum, pos) => sum + pos.xAdvance, 0) * (46 / template2Font.unitsPerEm)));
   const glyphAdvances = layout.positions.map(position => position.xAdvance * curveScale);
   const titleWidth = glyphAdvances.reduce((sum, advance) => sum + advance, 0) + Math.max(0, glyphAdvances.length - 1) * -0.3;
@@ -364,7 +378,9 @@ function createStandingsTemplate2Svg({ eventName, gameName, rows }) {
     const fill = index % 2 ? '#f7e5bf' : '#fdf2dc';
     const team = String(row.team || '').slice(0, 36);
     const teamLabel = team.toUpperCase();
-    const logo = row.logo ? `<image href="${row.logo}" x="${columns[1] + 18}" y="${(y + (rowHeight - 26) / 2).toFixed(2)}" width="26" height="26" preserveAspectRatio="xMidYMid meet"/>` : (team ? `<rect x="${columns[1] + 18}" y="${(y + (rowHeight - 26) / 2).toFixed(2)}" width="26" height="26" rx="13" fill="#c80f0a"/><text x="${columns[1] + 31}" y="${(y + rowHeight / 2 + 4).toFixed(2)}" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#ffffff">${escapeXml(team[0].toUpperCase())}</text>` : '');
+    const logo = row.logo
+      ? `<image href="${row.logo}" x="${columns[1] + 18}" y="${(y + (rowHeight - 26) / 2).toFixed(2)}" width="26" height="26" preserveAspectRatio="xMidYMid meet"/>`
+      : team ? `<circle cx="${columns[1] + 31}" cy="${(y + rowHeight / 2).toFixed(2)}" r="13" fill="#c80f0a"/>${templateTextPaths(template2Font, Array.from(team)[0].toUpperCase(), columns[1] + 31, y + rowHeight / 2 + 4, 12, '#ffffff', { anchor: 'middle' })}` : '';
     const values = [row.wins, row.killPoints, row.placementPoints, row.totalPoints];
     const valueCells = values.map((value, offset) => {
       const columnIndex = offset + 2;
@@ -385,9 +401,9 @@ function createStandingsTemplate2Svg({ eventName, gameName, rows }) {
     <defs><clipPath id="template2TableClip"><rect x="${x}" y="${tableY}" width="1004" height="${tableHeight}" rx="16"/></clipPath></defs>
     <g clip-path="url(#template2TableClip)"><rect x="${x}" y="${tableY}" width="1004" height="${headerHeight}" fill="#c80f0a"/><rect x="${x}" y="${tableY + headerHeight}" width="1004" height="${tableHeight - headerHeight}" fill="#fdf2dc"/><rect x="${columns[1]}" y="${tableY}" width="${columnWidths[1]}" height="${headerHeight}" fill="#c80f0a"/>${headerMarkup}${body}</g>
     <rect x="${x}" y="${tableY}" width="1004" height="${tableHeight}" rx="16" fill="none" stroke="#ebd0a0" stroke-width="1"/>
-    <text x="48" y="1270" font-family="Arial,sans-serif" font-size="17.5" font-weight="500" letter-spacing=".3" fill="#ffffff">Made With</text>
+    ${templateTextPaths(template2Font, 'Made With', 48, 1270, 17.5, '#ffffff', { letterSpacing: 0.3 })}
     <image href="${brandLogo}" x="48" y="1277" width="190" height="35" preserveAspectRatio="xMinYMid meet" filter="brightness(0) invert(1)"/>
-    <text x="1032" y="1300" text-anchor="end" font-family="Arial,sans-serif" font-size="16.5" font-weight="800" letter-spacing=".6" fill="#ffffff">${isBgmi ? 'WINNER WINNER CHICKEN DINNER' : 'COMPETE SURVIVE BOOYAH'}</text>
+    ${templateTextPaths(template2Font, isBgmi ? 'WINNER WINNER CHICKEN DINNER' : 'COMPETE SURVIVE BOOYAH', 1032, 1300, 16.5, '#ffffff', { anchor: 'end', letterSpacing: 0.6 })}
   </svg>`;
 }
 
@@ -430,7 +446,7 @@ function createStandingsTemplate3Svg({ eventName, rows }) {
     return { ...curvePoint(t), t };
   };
 
-  const titleLayout = template3Font.layout(safeEventName || 'Event');
+  const titleLayout = template3Font.layout(templateSafeText(template3Font, safeEventName || 'Event'));
   const fontSize = 36;
   const baseScale = fontSize / template3Font.unitsPerEm;
   const measuredWidth = titleLayout.positions.reduce((sum, position) => sum + position.xAdvance * baseScale, 0) + Math.max(0, titleLayout.positions.length - 1) * 0.5;
@@ -501,12 +517,12 @@ function createStandingsTemplate3Svg({ eventName, rows }) {
     ${titleStars}${titleMarkup}
     <g clip-path="url(#template3TableClip)"><rect x="${x}" y="${tableY}" width="${tableWidth}" height="${headerHeight}" fill="#006d6a"/>${headerMarkup}${body}</g>
     <rect x="${x}" y="${tableY}" width="${tableWidth}" height="${tableHeight.toFixed(2)}" rx="14" fill="none" stroke="#dcd3c3" stroke-width="1.5"/>
-    <text x="${width / 2}" y="1287" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" font-weight="700" letter-spacing=".4" fill="#006d6a">Made With</text>
+    ${templateTextPaths(template3Font, 'Made With', width / 2, 1287, 15, '#006d6a', { anchor: 'middle', letterSpacing: 0.4 })}
     <image href="${brandLogo}" x="${width / 2 - 70}" y="1293" width="140" height="30" preserveAspectRatio="xMidYMid meet"/>
   </svg>`;
 }
 
-function createStandingsTemplate4Svg({ eventName, gameName, rows }) {
+function createStandingsTemplate4Svg({ eventName, gameName, rows, title }) {
   const width = 1080;
   const height = 1350;
   const tableX = 108;
@@ -518,13 +534,13 @@ function createStandingsTemplate4Svg({ eventName, gameName, rows }) {
   const starts = [tableX];
   columns.forEach(columnWidth => starts.push(starts[starts.length - 1] + columnWidth));
   const textPathsFit = (font, text, x, baseline, size, color, maxWidth, options = {}) => {
-    const layout = font.layout(String(text));
+    const layout = font.layout(templateSafeText(font, text));
     const widthAtSize = layout.positions.reduce((sum, position) => sum + position.xAdvance, 0) * size / font.unitsPerEm;
     return templateTextPaths(font, text, x, baseline, size * Math.min(1, maxWidth / Math.max(widthAtSize, 1)), color, options);
   };
   const truncateToWidth = (font, text, size, maxWidth) => {
     let value = String(text || '').toUpperCase();
-    while (value && font.layout(`${value}…`).positions.reduce((sum, position) => sum + position.xAdvance, 0) * size / font.unitsPerEm > maxWidth) {
+    while (value && font.layout(templateSafeText(font, `${value}…`)).positions.reduce((sum, position) => sum + position.xAdvance, 0) * size / font.unitsPerEm > maxWidth) {
       value = value.slice(0, -1);
     }
     return value.length < String(text || '').length ? `${value}…` : value;
@@ -586,22 +602,24 @@ function createStandingsTemplate4Svg({ eventName, gameName, rows }) {
   const tableHeight = headerHeight + paddedRows.length * rowHeight;
   const brandLogo = templateAssetData(template4Brand, 'image/png');
   const tournamentName = truncateToWidth(template4BebasBold, subtitle, 38, 640);
-  const titleOne = template4BebasBold.layout('OVERALL').positions.reduce((sum, position) => sum + position.xAdvance, 0) * 120 / template4BebasBold.unitsPerEm;
-  const titleTwo = template4BebasBold.layout('STANDINGS').positions.reduce((sum, position) => sum + position.xAdvance, 0) * 120 / template4BebasBold.unitsPerEm;
+  const titleFirst = title === 'MATCH RESULTS' ? 'MATCH' : 'OVERALL';
+  const titleSecond = title === 'MATCH RESULTS' ? 'RESULTS' : 'STANDINGS';
+  const titleOne = template4BebasBold.layout(titleFirst).positions.reduce((sum, position) => sum + position.xAdvance, 0) * 120 / template4BebasBold.unitsPerEm;
+  const titleTwo = template4BebasBold.layout(titleSecond).positions.reduce((sum, position) => sum + position.xAdvance, 0) * 120 / template4BebasBold.unitsPerEm;
   const headerWidth = Math.max(titleOne, titleTwo, 520);
   const footerTop = tableY + tableHeight + 24;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
     <image href="${templateAssetData(template4Background, 'image/png')}" x="0" y="0" width="${width}" height="${height}"/>
     ${textPathsFit(template4BebasBold, tournamentName, 163, 122, 38, '#120e0c', 650, { letterSpacing: 1.5 })}
-    ${textPathsFit(template4BebasBold, 'OVERALL', 163, 224, 120, '#14100e', headerWidth, { strokeWidth: 1.5, letterSpacing: 1 })}
-    ${textPathsFit(template4BebasBold, 'STANDINGS', 163, 326, 120, '#14100e', headerWidth, { strokeWidth: 1.5, letterSpacing: 1 })}
+    ${textPathsFit(template4BebasBold, titleFirst, 163, 224, 120, '#14100e', headerWidth, { strokeWidth: 1.5, letterSpacing: 1 })}
+    ${textPathsFit(template4BebasBold, titleSecond, 163, 326, 120, '#14100e', headerWidth, { strokeWidth: 1.5, letterSpacing: 1 })}
     <line x1="163" y1="344" x2="${163 + headerWidth}" y2="344" stroke="#806b58" stroke-width="1"/>
     ${textPathsFit(template1JakartaBoldFont, 'GAME:', 163, 372, 11.5, '#4b3e34', 42, { letterSpacing: 1.5 })}
     ${textPathsFit(template1JakartaBoldFont, brandGame.toUpperCase(), 208, 372, 11.5, '#181310', 350, { letterSpacing: 1.5, strokeWidth: 0.2 })}
     <defs><clipPath id="template4TableClip"><rect x="${tableX}" y="${tableY}" width="${tableWidth}" height="${tableHeight}" rx="6"/></clipPath></defs>
     <g clip-path="url(#template4TableClip)"><rect x="${tableX}" y="${tableY}" width="${tableWidth}" height="${headerHeight}" fill="#efd7b7"/><rect x="${starts[5]}" y="${tableY}" width="${columns[5]}" height="${headerHeight}" fill="#b84e22"/>${headerMarkup}${body}</g>
     <rect x="${tableX}" y="${tableY}" width="${tableWidth}" height="${tableHeight}" rx="6" fill="none" stroke="rgba(140,108,81,.5)" stroke-width="1.3"/>
-    <text x="${width / 2}" y="${footerTop + 16}" text-anchor="middle" font-family="Arial,sans-serif" font-size="13" font-weight="700" letter-spacing=".5" fill="#3b2e24">Made with</text>
+    ${templateTextPaths(template1JakartaBoldFont, 'Made with', width / 2, footerTop + 16, 13, '#3b2e24', { anchor: 'middle', letterSpacing: 0.5 })}
     <image href="${brandLogo}" x="${width / 2 - 90}" y="${footerTop + 24}" width="180" height="30" preserveAspectRatio="xMidYMid meet"/>
   </svg>`;
 }
@@ -630,7 +648,7 @@ function createStandingsTemplate5Svg({ eventName, rows }) {
   const tableText = (text, x, y, size, color, options = {}) =>
     templateTextPaths(tableFont, text, x, y, size, color, options);
   const titleMarkup = (text, centerX, baseline, size, maxWidth, color) => {
-    const layout = titleFont.layout(String(text));
+    const layout = titleFont.layout(templateSafeText(titleFont, text));
     const naturalWidth = layout.positions.reduce((sum, position) => sum + position.xAdvance, 0) * size / titleFont.unitsPerEm;
     return templateTextPaths(titleFont, text, centerX, baseline, size * Math.min(1, maxWidth / Math.max(naturalWidth, 1)), color, { anchor: 'middle', letterSpacing: 0.3 });
   };
@@ -848,13 +866,14 @@ const renderStandingsTemplate = (templateNumber) => async (req, res) => {
       4: createStandingsTemplate4Svg,
       5: createStandingsTemplate5Svg,
     };
-    const svg = renderers[templateNumber]({ eventName, gameName: event.game, rows });
+    const title = req.body.title === 'MATCH RESULTS' ? 'MATCH RESULTS' : undefined;
+    const svg = renderers[templateNumber]({ eventName, gameName: event.game, rows, title });
     let png = await sharp(Buffer.from(svg)).png().toBuffer();
     if (hue || brightness !== 100 || saturation !== 100 || contrast !== 100) {
       png = await sharp(png).modulate({ hue, brightness, saturation }).linear(contrast / 100, 128 * (1 - contrast / 100)).png().toBuffer();
     }
     sendProgress(res, 96, 'Finishing image');
-    const filename = `${safeFilename(event.name)}-standings${templateNumber === 1 ? '' : `-template-${templateNumber}`}.png`;
+    const filename = `${safeFilename(event.name)}-${title ? 'match-results' : 'standings'}${templateNumber === 1 ? '' : `-template-${templateNumber}`}.png`;
     res.write(`${JSON.stringify({ type: 'complete', progress: 100, filename, mimeType: 'image/png', file: png.toString('base64') })}\n`);
     return res.end();
   } catch (error) {
