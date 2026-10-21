@@ -191,7 +191,7 @@ function templateTextPaths(font, text, x, baseline, fontSize, color, { anchor = 
   const scale = fontSize / font.unitsPerEm;
   const width = layout.positions.reduce((sum, position) => sum + position.xAdvance * scale, 0)
     + Math.max(0, layout.positions.length - 1) * letterSpacing;
-  let cursor = anchor === 'middle' ? x - width / 2 : x;
+  let cursor = anchor === 'middle' ? x - width / 2 : anchor === 'end' ? x - width : x;
   return layout.glyphs.map((glyph, index) => {
     const position = layout.positions[index];
     const glyphX = cursor + position.xOffset * scale;
@@ -200,6 +200,26 @@ function templateTextPaths(font, text, x, baseline, fontSize, color, { anchor = 
     const stroke = strokeWidth > 0 ? ` stroke="${color}" stroke-width="${strokeWidth}" stroke-linejoin="round" paint-order="stroke fill"` : '';
     return `<path d="${glyph.path.toSVG()}" transform="translate(${glyphX.toFixed(2)} ${glyphY.toFixed(2)}) scale(${scale} ${-scale})" fill="${color}"${stroke}/>`;
   }).join('');
+}
+
+function templateTextPathsFitRight(font, text, rightEdge, leftLimit, baseline, fontSize, color, { letterSpacing = 0, strokeWidth = 0 } = {}) {
+  const safeText = templateSafeText(font, text);
+  const layout = font.layout(safeText);
+  const baseScale = fontSize / font.unitsPerEm;
+  const baseWidth = layout.positions.reduce((sum, position) => sum + position.xAdvance * baseScale, 0)
+    + Math.max(0, layout.positions.length - 1) * letterSpacing;
+  const maxWidth = Math.max(1, rightEdge - leftLimit);
+  const fitScale = Math.min(1, maxWidth / Math.max(baseWidth, 1));
+  const fittedFontSize = fontSize * fitScale;
+  const fittedLetterSpacing = letterSpacing * fitScale;
+  const fittedWidth = baseWidth * fitScale;
+  // Position from the measured left edge instead of relying on SVG text-anchor,
+  // and keep a small margin from the canvas edge even for unusually long copy.
+  const startX = Math.max(leftLimit, rightEdge - fittedWidth);
+  return templateTextPaths(font, safeText, startX, baseline, fittedFontSize, color, {
+    letterSpacing: fittedLetterSpacing,
+    strokeWidth,
+  });
 }
 
 function createStandingsTemplate1Svg({ eventName, gameName, rows, title }) {
@@ -280,10 +300,16 @@ function createStandingsTemplate1Svg({ eventName, gameName, rows, title }) {
       const accent = isBgmi ? 'CHICKEN DINNER!' : 'BOOYAH!';
       const fontSize = 15;
       const spacing = 0.5;
-      const leadWidth = template1JakartaBoldFont.layout(lead).positions.reduce((sum, position) => sum + position.xAdvance, 0) * fontSize / template1JakartaBoldFont.unitsPerEm + (lead.length - 1) * spacing;
-      const accentWidth = template1JakartaBoldFont.layout(accent).positions.reduce((sum, position) => sum + position.xAdvance, 0) * fontSize / template1JakartaBoldFont.unitsPerEm + (accent.length - 1) * spacing;
-      const startX = 1030 - leadWidth - 7 - accentWidth;
-      return `${templateTextPaths(template1JakartaBoldFont, lead, startX, 1310, fontSize, '#111113', { letterSpacing: spacing })}${templateTextPaths(template1JakartaBoldFont, accent, startX + leadWidth + 7, 1310, fontSize, '#ff5801', { letterSpacing: spacing })}`;
+      const measure = (text, size, letterSpacing) => template1JakartaBoldFont.layout(text).positions.reduce((sum, position) => sum + position.xAdvance, 0) * size / template1JakartaBoldFont.unitsPerEm + (text.length - 1) * letterSpacing;
+      const leadWidth = measure(lead, fontSize, spacing);
+      const accentWidth = measure(accent, fontSize, spacing);
+      const totalWidth = leadWidth + 7 + accentWidth;
+      const fitScale = Math.min(1, 560 / Math.max(totalWidth, 1));
+      const fittedSize = fontSize * fitScale;
+      const fittedSpacing = spacing * fitScale;
+      const fittedLeadWidth = measure(lead, fittedSize, fittedSpacing);
+      const startX = 1024 - totalWidth * fitScale;
+      return `${templateTextPaths(template1JakartaBoldFont, lead, startX, 1310, fittedSize, '#111113', { letterSpacing: fittedSpacing })}${templateTextPaths(template1JakartaBoldFont, accent, startX + fittedLeadWidth + 7 * fitScale, 1310, fittedSize, '#ff5801', { letterSpacing: fittedSpacing })}`;
     })()}
   </svg>`;
 }
@@ -403,7 +429,7 @@ function createStandingsTemplate2Svg({ eventName, gameName, rows }) {
     <rect x="${x}" y="${tableY}" width="1004" height="${tableHeight}" rx="16" fill="none" stroke="#ebd0a0" stroke-width="1"/>
     ${templateTextPaths(template2Font, 'Made With', 48, 1270, 17.5, '#ffffff', { letterSpacing: 0.3 })}
     <image href="${brandLogo}" x="48" y="1277" width="190" height="35" preserveAspectRatio="xMinYMid meet" filter="brightness(0) invert(1)"/>
-    ${templateTextPaths(template2Font, isBgmi ? 'WINNER WINNER CHICKEN DINNER' : 'COMPETE SURVIVE BOOYAH', 1032, 1300, 16.5, '#ffffff', { anchor: 'end', letterSpacing: 0.6 })}
+    ${templateTextPathsFitRight(template2Font, isBgmi ? 'WINNER WINNER CHICKEN DINNER' : 'COMPETE SURVIVE BOOYAH', 1024, 440, 1300, 16.5, '#ffffff', { letterSpacing: 0.6 })}
   </svg>`;
 }
 
