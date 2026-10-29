@@ -15,20 +15,21 @@ const PlatformTemplateMigration = require("../models/PlatformTemplateMigration")
 const { CLOUDINARY_FOLDERS, CLOUDINARY_AUDIT_FOLDERS } = require("../utils/cloudinaryFolders");
 
 const DEFAULT_PLATFORM_TEMPLATES = [
-  ["autumn-season-template", "Autumn Season Template", "Leaderboard", "Battle Royale", "/Templates/Leaderboard/Universal/Battle%20Royal/Team%20Results/Premium/Autumn%20Season%20Template/Design.html"],
-  ["general-template-1", "General Template 1", "Leaderboard", "Battle Royale", "/Templates/Leaderboard/Universal/Battle%20Royal/Team%20Results/Premium/General%20Template%201/design.html"],
-  ["general-template-2", "General Template 2", "Leaderboard", "Battle Royale", "/Templates/Leaderboard/Universal/Battle%20Royal/Team%20Results/Premium/General%20Template%202/design.html"],
-  ["general-template-3", "General Template 3", "Leaderboard", "Battle Royale", "/Templates/Leaderboard/Universal/Battle%20Royal/Team%20Results/Premium/General%20Template%203/design.html"],
-  ["free-fire-theme-template", "Free Fire Theme Template", "Leaderboard", "Battle Royale", "/Templates/Leaderboard/Universal/Battle%20Royal/Team%20Results/Premium/Free%20Fire%20Theme%20Template/design.html"],
-  ["autumn-top-shooters-template", "Autumn Top Shooters", "Top Shooters", "Battle Royale", "/Templates/Leaderboard/Universal/Battle%20Royal/Top%20Shooters/Autumn%20Theme%20Template/design.html"],
-  ["general-1-top-shooters-template", "General 1 Top Shooters", "Top Shooters", "Battle Royale", "/Templates/Leaderboard/Universal/Battle%20Royal/Top%20Shooters/General%201%20Template/design.html"],
-  ["general-2-top-shooters-template", "General 2 Top Shooters", "Top Shooters", "Battle Royale", "/Templates/Leaderboard/Universal/Battle%20Royal/Top%20Shooters/General%202%20Template/design.html"],
-].map(([templateKey, name, category, format, previewUrl]) => ({
+  ["autumn-season-template", "Autumn Season Template", "Leaderboard", "Battle Royale", "/Templates/Leaderboard/Universal/Battle%20Royal/Team%20Results/Premium/Autumn%20Season%20Template/Design.html", "standings-template-4"],
+  ["general-template-1", "General Template 1", "Leaderboard", "Battle Royale", "/Templates/Leaderboard/Universal/Battle%20Royal/Team%20Results/Premium/General%20Template%201/design.html", "standings-template-1"],
+  ["general-template-2", "General Template 2", "Leaderboard", "Battle Royale", "/Templates/Leaderboard/Universal/Battle%20Royal/Team%20Results/Premium/General%20Template%202/design.html", "standings-template-2"],
+  ["general-template-3", "General Template 3", "Leaderboard", "Battle Royale", "/Templates/Leaderboard/Universal/Battle%20Royal/Team%20Results/Premium/General%20Template%203/design.html", "standings-template-3"],
+  ["free-fire-theme-template", "Free Fire Theme Template", "Leaderboard", "Battle Royale", "/Templates/Leaderboard/Universal/Battle%20Royal/Team%20Results/Premium/Free%20Fire%20Theme%20Template/design.html", "standings-template-5"],
+  ["autumn-top-shooters-template", "Autumn Top Shooters", "Top Shooters", "Battle Royale", "/Templates/Leaderboard/Universal/Battle%20Royal/Top%20Shooters/Autumn%20Theme%20Template/design.html", "top-shooters-template-3"],
+  ["general-1-top-shooters-template", "General 1 Top Shooters", "Top Shooters", "Battle Royale", "/Templates/Leaderboard/Universal/Battle%20Royal/Top%20Shooters/General%201%20Template/design.html", "top-shooters-template-1"],
+  ["general-2-top-shooters-template", "General 2 Top Shooters", "Top Shooters", "Battle Royale", "/Templates/Leaderboard/Universal/Battle%20Royal/Top%20Shooters/General%202%20Template/design.html", "top-shooters-template-2"],
+].map(([templateKey, name, category, format, previewUrl, exportKey]) => ({
   templateKey,
   name,
   category,
   format,
   previewUrl,
+  exportKey,
   tags: [],
 }));
 
@@ -44,6 +45,7 @@ function serializePlatformTemplate(template) {
     category: template.category,
     format: template.format,
     previewUrl: template.previewUrl,
+    exportKey: template.exportKey || "",
     tags: template.tags || [],
     createdAt: template.createdAt,
     updatedAt: template.updatedAt,
@@ -55,7 +57,7 @@ async function ensureDefaultPlatformTemplates() {
     DEFAULT_PLATFORM_TEMPLATES.map((template) => ({
       updateOne: {
         filter: { templateKey: template.templateKey },
-        update: { $setOnInsert: template },
+        update: { $setOnInsert: template, $set: { exportKey: template.exportKey } },
         upsert: true,
       },
     })),
@@ -770,7 +772,7 @@ exports.getPlatformTemplates = async (_req, res) => {
 
 exports.createPlatformTemplate = async (req, res) => {
   try {
-    const { name, category, format, previewUrl } = req.body;
+    const { name, category, format, previewUrl, exportKey } = req.body;
     if (!String(name || "").trim()) return res.status(400).json({ message: "Template name is required" });
     if (!String(category || "").trim()) return res.status(400).json({ message: "Template category is required" });
     if (!String(format || "").trim()) return res.status(400).json({ message: "Template format is required" });
@@ -783,6 +785,7 @@ exports.createPlatformTemplate = async (req, res) => {
       category: String(category).trim(),
       format: String(format).trim(),
       previewUrl: String(previewUrl).trim(),
+      exportKey: String(exportKey || "").trim(),
       tags: normalizeTemplateTags(req.body.tags),
     });
     res.status(201).json(serializePlatformTemplate(template));
@@ -794,7 +797,7 @@ exports.createPlatformTemplate = async (req, res) => {
 exports.updatePlatformTemplate = async (req, res) => {
   try {
     const patch = {};
-    ["name", "category", "format", "previewUrl"].forEach((field) => {
+    ["name", "category", "format", "previewUrl", "exportKey"].forEach((field) => {
       if (req.body[field] !== undefined) patch[field] = String(req.body[field]).trim();
     });
     if (req.body.tags !== undefined) patch.tags = normalizeTemplateTags(req.body.tags);

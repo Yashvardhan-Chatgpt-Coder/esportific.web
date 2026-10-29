@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const Event = require('../models/Event');
+const PlatformTemplate = require('../models/PlatformTemplate');
 const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -920,6 +921,34 @@ router.post('/events/:eventId/standings-template-5', renderStandingsTemplate(5))
 router.post('/events/:eventId/top-shooters-template-1', renderTopShootersTemplate(1));
 router.post('/events/:eventId/top-shooters-template-2', renderTopShootersTemplate(2));
 router.post('/events/:eventId/top-shooters-template-3', renderTopShootersTemplate(3));
+
+// Mobile clients resolve templates through the shared platform catalog rather
+// than shipping a list of template-specific export routes in each app build.
+router.post('/events/:eventId/template/:templateKey', async (req, res, next) => {
+  try {
+    const template = await PlatformTemplate.findOne({ templateKey: req.params.templateKey }).lean();
+    if (!template?.exportKey) return res.status(404).json({ message: 'This template is not available for mobile export.' });
+    const renderer = PLATFORM_TEMPLATE_RENDERERS[template.exportKey];
+    if (!renderer) return res.status(404).json({ message: 'This template has no compatible mobile renderer yet.' });
+    return renderer(req, res, next);
+  } catch (error) {
+    return next(error);
+  }
+});
+
+// Add a renderer here when publishing a new platform template. Mobile clients
+// discover the template via the shared catalog, so this does not require an
+// app release.
+const PLATFORM_TEMPLATE_RENDERERS = {
+  'standings-template-1': renderStandingsTemplate(1),
+  'standings-template-2': renderStandingsTemplate(2),
+  'standings-template-3': renderStandingsTemplate(3),
+  'standings-template-4': renderStandingsTemplate(4),
+  'standings-template-5': renderStandingsTemplate(5),
+  'top-shooters-template-1': renderTopShootersTemplate(1),
+  'top-shooters-template-2': renderTopShootersTemplate(2),
+  'top-shooters-template-3': renderTopShootersTemplate(3),
+};
 
 router.post('/events/:eventId/teams-export', async (req, res) => {
   try {

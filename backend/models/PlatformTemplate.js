@@ -7,6 +7,9 @@ const platformTemplateSchema = new mongoose.Schema(
     category: { type: String, required: true, trim: true, maxlength: 80 },
     format: { type: String, required: true, trim: true, maxlength: 80 },
     previewUrl: { type: String, required: true, trim: true },
+    // Backend renderer identifier consumed by mobile. Keep rendering data on
+    // the server so newly published designs do not require an APK update.
+    exportKey: { type: String, trim: true, default: "" },
     tags: {
       type: [{ type: String, trim: true, maxlength: 40 }],
       default: [],
