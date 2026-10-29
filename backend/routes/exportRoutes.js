@@ -922,13 +922,25 @@ router.post('/events/:eventId/top-shooters-template-1', renderTopShootersTemplat
 router.post('/events/:eventId/top-shooters-template-2', renderTopShootersTemplate(2));
 router.post('/events/:eventId/top-shooters-template-3', renderTopShootersTemplate(3));
 
+const BUILT_IN_TEMPLATE_EXPORT_KEYS = {
+  'general-template-1': 'standings-template-1',
+  'general-template-2': 'standings-template-2',
+  'general-template-3': 'standings-template-3',
+  'autumn-season-template': 'standings-template-4',
+  'free-fire-theme-template': 'standings-template-5',
+  'general-1-top-shooters-template': 'top-shooters-template-1',
+  'general-2-top-shooters-template': 'top-shooters-template-2',
+  'autumn-top-shooters-template': 'top-shooters-template-3',
+};
+
 // Mobile clients resolve templates through the shared platform catalog rather
 // than shipping a list of template-specific export routes in each app build.
 router.post('/events/:eventId/template/:templateKey', async (req, res, next) => {
   try {
     const template = await PlatformTemplate.findOne({ templateKey: req.params.templateKey }).lean();
-    if (!template?.exportKey) return res.status(404).json({ message: 'This template is not available for mobile export.' });
-    const renderer = PLATFORM_TEMPLATE_RENDERERS[template.exportKey];
+    const exportKey = template?.exportKey || BUILT_IN_TEMPLATE_EXPORT_KEYS[req.params.templateKey];
+    if (!exportKey) return res.status(404).json({ message: 'This template is not available for mobile export.' });
+    const renderer = PLATFORM_TEMPLATE_RENDERERS[exportKey];
     if (!renderer) return res.status(404).json({ message: 'This template has no compatible mobile renderer yet.' });
     return renderer(req, res, next);
   } catch (error) {
