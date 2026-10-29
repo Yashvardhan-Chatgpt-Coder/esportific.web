@@ -6,16 +6,31 @@ const path = require("path");
 const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/User");
 const Otp = require("../models/Otp");
+const PasswordResetOtp = require("../models/PasswordResetOtp");
+const PasswordResetSession = require("../models/PasswordResetSession");
 const { Resend } = require("resend");
 const cloudinary = require("../config/cloudinary");
 const { CLOUDINARY_FOLDERS } = require("../utils/cloudinaryFolders");
 const { changed, createUserLog, requestContext } = require("../utils/userLogs");
+const { invalidateUserAuthCache } = require("../middleware/authMiddleware");
 
 // Instantiate Resend with API Key from environment variables
 const resend = new Resend(process.env.RESEND_API_KEY);
 const otpSender = process.env.RESEND_FROM_EMAIL || "Esportific <noreply.esportific@rangrove.com>";
 const otpEmailTemplate = fs.readFileSync(path.join(__dirname, "../templates/otp-verification.html"), "utf8");
 const googleOAuthClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const hashResetValue = (value) => crypto.createHash("sha256").update(value).digest("hex");
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+function renderOtpEmail({ otp, title, preheader, heading, description }) {
+  return otpEmailTemplate
+    .replace(/\{\{OTP\}\}/g, otp)
+    .replace(/\{\{EMAIL_TITLE\}\}/g, title)
+    .replace(/\{\{EMAIL_PREHEADER\}\}/g, preheader)
+    .replace(/\{\{EMAIL_HEADING\}\}/g, heading)
+    .replace(/\{\{EMAIL_DESCRIPTION\}\}/g, description);
+}
 
 // Persistent sessions have no time-based expiry. They are revoked when the user
 // explicitly logs out, and remain valid across browser/app restarts.
@@ -29,6 +44,7 @@ async function createSessionToken(user) {
     { _id: user._id },
     { $push: { authSessions: { sessionId, createdAt: new Date() } } },
   );
+  invalidateUserAuthCache(user._id);
   return generateToken(user._id, sessionId);
 };
 
@@ -138,7 +154,13 @@ const sendOtp = async (req, res) => {
       { upsert: true, new: true },
     );
 
-    const emailHtml = otpEmailTemplate.replace(/\{\{OTP\}\}/g, otp);
+    const emailHtml = renderOtpEmail({
+      otp,
+      title: "Verify your Esportific account",
+      preheader: `Your Esportific verification code is ${otp}.`,
+      heading: "Verify your email",
+      description: "Enter this code to verify your Esportific account.",
+    });
     const { error: emailError } = await resend.emails.send({
       from: otpSender,
       to: email,
@@ -156,6 +178,141 @@ const sendOtp = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Failed to send verification code" });
+  }
+};
+
+// @route POST /api/auth/password-reset/send-otp
+// Always returns the same response to avoid exposing whether an email has an account.
+const sendPasswordResetOtp = async (req, res) => {
+  try {
+    const email = String(req.body.email || "").trim();
+    if (!email || email.length > 254 || !/^\S+@\S+\.\S+$/.test(email)) {
+      return res.status(400).json({ message: "Enter a valid email address." });
+    }
+
+    const user = await User.findOne({ email: { $regex: `^${escapeRegex(email)}$`, $options: "i" } });
+    if (!user || user.role !== "organizer") {
+      return res.status(200).json({ message: "If an account exists for that email, a reset code is on its way." });
+    }
+
+    const canonicalEmail = user.email.toLowerCase();
+    const previousOtp = await PasswordResetOtp.findOne({ email: canonicalEmail });
+    if (previousOtp && Date.now() - previousOtp.createdAt.getTime() < 60_000) {
+      return res.status(200).json({ message: "If an account exists for that email, a reset code is on its way." });
+    }
+
+    const otp = crypto.randomInt(100000, 1000000).toString();
+    await PasswordResetOtp.findOneAndUpdate(
+      { email: canonicalEmail },
+      { codeHash: hashResetValue(otp), attempts: 0, createdAt: new Date() },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    );
+
+    const { error: emailError } = await resend.emails.send({
+      from: otpSender,
+      to: user.email,
+      subject: "Reset your Esportific password",
+      html: renderOtpEmail({
+        otp,
+        title: "Reset your Esportific password",
+        preheader: `Your Esportific password reset code is ${otp}.`,
+        heading: "Reset your password",
+        description: "Enter this code in Esportific to continue resetting your password.",
+      }),
+    });
+
+    if (emailError) {
+      await PasswordResetOtp.deleteOne({ email: canonicalEmail, codeHash: hashResetValue(otp) });
+      console.error("Resend password-reset delivery failed:", emailError.message || "Unknown provider error");
+    }
+    return res.status(200).json({ message: "If an account exists for that email, a reset code is on its way." });
+  } catch (error) {
+    console.error("Could not send password-reset code:", error);
+    return res.status(500).json({ message: "Could not send a reset code. Please try again shortly." });
+  }
+};
+
+const verifyPasswordResetOtp = async (req, res) => {
+  try {
+    const email = String(req.body.email || "").trim().toLowerCase();
+    const otp = String(req.body.otp || "").trim();
+    if (!email || !/^\d{6}$/.test(otp)) {
+      return res.status(400).json({ message: "Enter the email address and 6-digit code." });
+    }
+
+    const otpDoc = await PasswordResetOtp.findOne({ email });
+    const isFresh = otpDoc && Date.now() - otpDoc.createdAt.getTime() < 5 * 60_000;
+    if (!otpDoc || !isFresh) {
+      return res.status(400).json({ message: "That code is invalid or has expired. Request a new one." });
+    }
+
+    const candidateHash = hashResetValue(otp);
+    const matches = crypto.timingSafeEqual(Buffer.from(candidateHash, "hex"), Buffer.from(otpDoc.codeHash, "hex"));
+    if (!matches) {
+      const updated = await PasswordResetOtp.findOneAndUpdate(
+        { _id: otpDoc._id },
+        { $inc: { attempts: 1 } },
+        { new: true },
+      );
+      if (updated && updated.attempts >= 5) await PasswordResetOtp.deleteOne({ _id: otpDoc._id });
+      return res.status(400).json({ message: updated?.attempts >= 5 ? "Too many incorrect attempts. Request a new code." : "That code is incorrect." });
+    }
+
+    const consumedOtp = await PasswordResetOtp.findOneAndDelete({ _id: otpDoc._id, codeHash: candidateHash });
+    if (!consumedOtp) return res.status(400).json({ message: "That code has already been used. Request a new one." });
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    await PasswordResetSession.deleteMany({ email });
+    await PasswordResetSession.create({
+      email,
+      tokenHash: hashResetValue(resetToken),
+      expiresAt: new Date(Date.now() + 10 * 60_000),
+    });
+    return res.status(200).json({ resetToken, message: "Code verified. You can now choose a new password." });
+  } catch (error) {
+    console.error("Could not verify password-reset code:", error);
+    return res.status(500).json({ message: "Could not verify the code. Please try again." });
+  }
+};
+
+const completePasswordReset = async (req, res) => {
+  try {
+    const resetToken = String(req.body.resetToken || "");
+    const newPassword = String(req.body.newPassword || "");
+    if (!/^[a-f0-9]{64}$/i.test(resetToken)) return res.status(400).json({ message: "Your reset session is invalid. Request a new code." });
+    if (newPassword.length < 6 || Buffer.byteLength(newPassword, "utf8") > 72) return res.status(400).json({ message: "Password must be at least 6 characters and no longer than 72 bytes." });
+
+    const resetSession = await PasswordResetSession.findOneAndDelete({
+      tokenHash: hashResetValue(resetToken),
+      expiresAt: { $gt: new Date() },
+    });
+    if (!resetSession) return res.status(400).json({ message: "Your reset session has expired. Request a new code." });
+
+    const user = await User.findOne({
+      email: { $regex: `^${escapeRegex(resetSession.email)}$`, $options: "i" },
+      role: "organizer",
+    });
+    if (!user) return res.status(400).json({ message: "This account can no longer reset its password." });
+
+    const hashedPassword = await bcrypt.hash(newPassword, await bcrypt.genSalt(10));
+    user.password = hashedPassword;
+    user.authSessions = [];
+    await user.save();
+    invalidateUserAuthCache(user._id);
+    await PasswordResetOtp.deleteOne({ email: resetSession.email });
+    await createUserLog(req, {
+      userId: user._id,
+      userName: user.name || user.email,
+      actorId: user._id,
+      actorName: user.name || user.email,
+      category: "account",
+      action: "password_reset",
+      message: "Reset account password using email verification.",
+    });
+    return res.status(200).json({ message: "Password updated. Please sign in with your new password." });
+  } catch (error) {
+    console.error("Could not complete password reset:", error);
+    return res.status(500).json({ message: "Could not update your password. Please try again." });
   }
 };
 
@@ -271,6 +428,7 @@ const logoutUser = async (req, res) => {
         { _id: req.user._id },
         { $pull: { authSessions: { sessionId: req.authSessionId } } },
       );
+      invalidateUserAuthCache(req.user._id);
     }
     if (req.user?.role !== "admin") {
       const context = requestContext(req);
@@ -408,7 +566,7 @@ const googleLogin = async (req, res) => {
 // @access  Private
 const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
+    const user = req.user || (await User.findById(req.user?.id).select("-password").lean());
     if (user) {
       res.json(userPayload(user));
     } else {
@@ -515,6 +673,7 @@ const updateUserProfile = async (req, res) => {
       }
 
       const updatedUser = await user.save();
+      invalidateUserAuthCache(updatedUser._id);
       const changes = [
         changed("name", "Name", previous.name, updatedUser.name),
         changed("email", "Email", previous.email, updatedUser.email),
@@ -601,6 +760,7 @@ const updatePassword = async (req, res) => {
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(newPassword, salt);
       await user.save();
+      invalidateUserAuthCache(user._id);
       await createUserLog(req, {
         category: "account",
         action: "password_changed",
@@ -618,6 +778,9 @@ const updatePassword = async (req, res) => {
 
 module.exports = {
   sendOtp,
+  sendPasswordResetOtp,
+  verifyPasswordResetOtp,
+  completePasswordReset,
   registerUser,
   loginUser,
   loginAdmin,
