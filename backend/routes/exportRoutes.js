@@ -35,12 +35,11 @@ function sendProgress(res, progress, stage) {
 
 function createTeamsSvg(event, teams, organizerName) {
   const width = 1080;
-  const height = 1350;
   const x = 72;
   const tableWidth = width - x * 2;
-  const tableY = 290;
+  const tableY = 250;
   const headerHeight = 62;
-  const rowHeight = teams.length > 12 ? 51 : 54;
+  const rowHeight = teams.length > 12 ? 56 : 54;
   const organizerPrefix = 'Organized by ';
   const organizerNameText = String(organizerName || '');
   const organizerPrefixWidth = template1JakartaSemiFont.layout(organizerPrefix).positions
@@ -59,6 +58,9 @@ function createTeamsSvg(event, teams, organizerName) {
       ${templateTextPaths(template1JakartaSemiFont, players.slice(0, 72), x + 375, y + 31, 14, '#343a46')}`;
   }).join('');
   const tableBottom = tableY + headerHeight + teams.length * rowHeight;
+  const footerLineY = tableBottom + 42;
+  const footerTextY = footerLineY + 50;
+  const height = footerTextY + 50;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
     <rect width="100%" height="100%" fill="#ffffff"/>
@@ -74,10 +76,10 @@ function createTeamsSvg(event, teams, organizerName) {
       ${rows}
     </g>
     <rect x="${x}" y="${tableY}" width="${tableWidth}" height="${tableBottom - tableY}" rx="14" fill="none" stroke="#e2e5ec" stroke-width="1.5"/>
-    <line x1="${x}" y1="1250" x2="${width - x}" y2="1250" stroke="#e2e5ec" stroke-width="1.5"/>
-    ${templateTextPaths(template1JakartaBoldFont, 'Made With', x, 1300, 20, '#666666')}
-    ${templateTextPaths(template1JakartaBoldFont, 'esportific', x + 116, 1300, 25, '#f21d49')}
-    ${templateTextPaths(template1JakartaBoldFont, `${teams.length}${event.teams.length > teams.length ? ` of ${event.teams.length}` : ''} ${teams.length === 1 ? 'team' : 'teams'}`, width - x, 1300, 20, '#666666', { anchor: 'end' })}
+    <line x1="${x}" y1="${footerLineY}" x2="${width - x}" y2="${footerLineY}" stroke="#e2e5ec" stroke-width="1.5"/>
+    ${templateTextPaths(template1JakartaBoldFont, 'Made With', x, footerTextY, 20, '#666666')}
+    ${templateTextPaths(template1JakartaBoldFont, 'esportific', x + 116, footerTextY, 25, '#f21d49')}
+    ${templateTextPaths(template1JakartaBoldFont, `${teams.length}${event.teams.length > teams.length ? ` of ${event.teams.length}` : ''} ${teams.length === 1 ? 'team' : 'teams'}`, width - x, footerTextY, 20, '#666666', { anchor: 'end' })}
   </svg>`;
 }
 
