@@ -33,6 +33,17 @@ const DEFAULT_PLATFORM_TEMPLATES = [
   tags: [],
 }));
 
+function platformTemplateSeedUpdate(template) {
+  // MongoDB rejects the same field appearing in both $setOnInsert and $set.
+  // Keep exportKey in $set so existing rows are upgraded, and exclude it from
+  // the insert-only fields so catalog reads remain valid on every request.
+  const { exportKey, ...insertFields } = template;
+  return {
+    $setOnInsert: insertFields,
+    $set: { exportKey },
+  };
+}
+
 function normalizeTemplateTags(value) {
   if (!Array.isArray(value)) return [];
   return [...new Set(value.map((tag) => String(tag).trim()).filter(Boolean))].slice(0, 12);
@@ -57,7 +68,7 @@ async function ensureDefaultPlatformTemplates() {
     DEFAULT_PLATFORM_TEMPLATES.map((template) => ({
       updateOne: {
         filter: { templateKey: template.templateKey },
-        update: { $setOnInsert: template, $set: { exportKey: template.exportKey } },
+        update: platformTemplateSeedUpdate(template),
         upsert: true,
       },
     })),
